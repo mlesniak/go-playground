@@ -7,6 +7,7 @@ build: main.go
 
 dependencies:
 	go get -u github.com/labstack/echo/...
+	go get "github.com/sirupsen/logrus"
 
 compress:
 	upx go-demo
