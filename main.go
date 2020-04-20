@@ -11,6 +11,7 @@ func main() {
 	e := echo.New()
 	e.GET("/", func(c echo.Context) error {
 		log.WithFields(log.Fields{
+			"ip": c.RealIP(),
 			"method": c.Request().Method,
 		}).Info("Request received")
 		return c.String(http.StatusOK, Message())
