@@ -1,7 +1,7 @@
 main: clean build compress
 
 build: main.go
-	golint
+	golint -set_exit_status
 	go test .
 	go build .
 
