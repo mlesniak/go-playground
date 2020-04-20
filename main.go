@@ -1,12 +1,20 @@
 package main
 
-import "fmt"
+import (
+	"net/http"
+
+	"github.com/labstack/echo/v4"
+)
 
 func main() {
-	fmt.Println(Message())
+	e := echo.New()
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, Message())
+	})
+	e.Logger.Fatal(e.Start(":8080"))
 }
 
 // Message returns a greeting string.
 func Message() string {
-	return "foo"
+	return "Hello, world"
 }
