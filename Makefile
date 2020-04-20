@@ -14,5 +14,12 @@ compress:
 clean:
 	rm -f go-demo
 
-run: 
+run:
 	go run .
+
+docker:
+	docker build -t mlesniak/go-demo .
+
+docker-run:
+	docker run --rm -it -p 8080:8080 mlesniak/go-demo
+
