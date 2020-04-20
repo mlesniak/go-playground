@@ -1,7 +1,7 @@
-main: clean build
+main: clean dependencies build
 
 build: main.go
-	golint -set_exit_status
+	# golint -set_exit_status
 	go test .
 	go build .
 
