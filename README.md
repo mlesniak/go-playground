@@ -8,7 +8,8 @@ This is a playground for miscellaneous go frameworks usable in a production syst
 
 # Next steps
 
-- [ ] local Logstash docker file
+- [ ] local filebear docker file
+- [ ] Submit logs to Sematext
 - [ ] docker-compose configuration
 - [ ] manual K8s deployment
 - [ ] automatic K8 deployment over Travis CI
