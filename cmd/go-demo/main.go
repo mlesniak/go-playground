@@ -18,6 +18,8 @@ func main() {
 
 func serve() {
 	e := echo.New()
+	e.HideBanner = true
+	e.HidePort = true
 
 	e.GET("/", func(c echo.Context) error {
 		log.Info("Demo logging context")
@@ -36,6 +38,7 @@ func initializeLogging() {
 	// On local environment ignore all file logging.
 	env := os.Getenv("ENVIRONMENT")
 	if env == "local" {
+		log.Info("Local environment, using solely console output")
 		return
 	}
 
