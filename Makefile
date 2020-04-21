@@ -1,9 +1,7 @@
 main: clean dependencies build
 
-build: main.go
-	# golint -set_exit_status
-	go test .
-	go build .
+build:
+	go build cmd/go-demo/main.go
 
 dependencies:
 	go get -u github.com/labstack/echo/...
