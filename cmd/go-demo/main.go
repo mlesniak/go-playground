@@ -33,7 +33,7 @@ func Message() string {
 }
 
 func initializeLogging() {
-	// TODO On local environment log to stdout.
+	// On local environment ignore all file logging.
 	env := os.Getenv("ENVIRONMENT")
 	if env == "local" {
 		return
