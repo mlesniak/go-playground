@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -32,15 +33,23 @@ func Message() string {
 }
 
 func initializeLogging() {
-	// On non-local environments, log to a file using json.
-	// (To be done)
+	// TODO On local environment log to stdout.
 
-	log.SetFormatter(&logrus.JSONFormatter{})
-	const logfile = "main.log.json"
-	file, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	// Create directory.
+	err := os.MkdirAll("logs", 0777)
 	if err != nil {
-		panic("Unable to create logfile?")
+		panic("Unable to create logging directory")
 	}
 
+	// Create logfile.
+	const logfile = "logs/main.log.json"
+	file, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		fmt.Println(err)
+		panic("Unable to create logfile")
+	}
 	log.SetOutput(file)
+
+	// Set to JSON.
+	log.SetFormatter(&logrus.JSONFormatter{})
 }
