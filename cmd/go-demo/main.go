@@ -34,6 +34,10 @@ func Message() string {
 
 func initializeLogging() {
 	// TODO On local environment log to stdout.
+	env := os.Getenv("ENVIRONMENT")
+	if env == "local" {
+		return
+	}
 
 	// Create directory.
 	err := os.MkdirAll("logs", 0777)
