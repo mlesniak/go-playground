@@ -8,9 +8,10 @@ This is a playground for miscellaneous go frameworks usable in a production syst
 
 # Next steps
 
-- [ ] local filebear docker file
-- [ ] Submit logs to Sematext
 - [ ] docker-compose configuration
+- [ ] local filebeat docker file
+- [ ] Enable log rotation
+- [ ] Submit logs to Sematext
 - [ ] manual K8s deployment
 - [ ] automatic K8 deployment over Travis CI
 

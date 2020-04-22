@@ -1,0 +1,16 @@
+version: "3.3"
+services:
+    main:
+        image: mlesniak/go-demo:latest
+        ports:
+            - 8080:8080
+        volumes:
+            - type: volume
+              source: logs
+              target: /app/logs
+
+#   filebeat:
+# image: docker.elastic.co/beats/filebeat:7.6.2
+
+volumes:
+    logs:
