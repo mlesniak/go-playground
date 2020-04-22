@@ -12,7 +12,6 @@ services:
     filebeat:
         image: docker.elastic.co/beats/filebeat:7.6.2
         # We should build  a docker container here.
-        # We should use persistence for offset storage
         volumes:
             - type: bind
               source: ./deployments/filebeat/filebeat.yml
@@ -20,9 +19,12 @@ services:
             - type: volume
               source: logs
               target: /logs
+            # Persist filebeat data to prevent data duplication
+            - filebeat-data:/usr/share/filebeat/data/
 
 volumes:
     logs:
+    filebeat-data:
 
 
 # -----------------------------------------------------------------------------------------------------
