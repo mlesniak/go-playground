@@ -8,16 +8,7 @@ This is a playground for miscellaneous go frameworks usable in a production syst
 
 # Next steps
 
-- [ ] docker-compose configuration
-- [ ] local filebeat docker file
+- [ ] filebeat docker file
 - [ ] Enable log rotation
-- [ ] Submit logs to Sematext
 - [ ] manual K8s deployment
 - [ ] automatic K8 deployment over Travis CI
-
-# Temporary code
-
-    docker run --rm -it \
-        -v $(pwd)/deployments/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml \
-        -v $(pwd)/logs:/logs \
-        docker.elastic.co/beats/filebeat:7.6.2
