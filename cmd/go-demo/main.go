@@ -26,7 +26,8 @@ func serve() {
 		return c.String(http.StatusOK, Message())
 	})
 
-	e.Logger.Info(e.Start(":8080"))
+	log.Info("Application started")
+	e.Start(":8080")
 }
 
 // Message returns a greeting string.
