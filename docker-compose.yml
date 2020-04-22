@@ -10,7 +10,10 @@ services:
               target: /app/logs
 
     filebeat:
-        image: docker.elastic.co/beats/filebeat:7.6.2
+        # build:
+            # context: .
+            # dockerfile: Dockerfile-filebeat
+        image: docker.elastic.co/beats/filebeat-oss:7.6.2
         # We should build  a docker container here.
         volumes:
             - type: bind
