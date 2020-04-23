@@ -2,7 +2,7 @@ version: "3.3"
 services:
     main:
         labels:
-        - filebeat
+        - log
         image: mlesniak/go-demo:latest
         ports:
             - 8080:8080

@@ -2,12 +2,26 @@
 #  setup.ilm.enabled: false
 
 logging.metrics.enabled: false
-logging.level: debug
+logging.level: info
 
-filebeat.inputs:
-  - type: container
-    paths:
-    - /var/lib/docker/containers/*/*.log
+# filebeat.inputs:
+#   - type: container
+#     paths:
+#     - /var/lib/docker/containers/*/*.log
+
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      templates:
+        - condition:
+            contains:
+              docker.container.image: mlesniak/go-demo
+          config:
+            - type: container
+              json.keys_under_root: true
+              json.add_error_key: true
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
 
 # output:
 #   # For debugging. Disable later...
