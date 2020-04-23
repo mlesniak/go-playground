@@ -42,5 +42,4 @@ output:
   elasticsearch:
     hosts: ["https://logsene-receiver.eu.sematext.com:443"]
     protocol: https
-    # TODO Will be removed and replaced later
     index: "${SEMATEXT_TOKEN}"

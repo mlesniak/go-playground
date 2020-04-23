@@ -1,9 +1,10 @@
 FROM alpine
 
 RUN apk add libc6-compat
-RUN wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.6.2-linux-x86_64.tar.gz
-RUN tar xvf filebeat-7.6.2-linux-x86_64.tar.gz
+RUN wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-oss-7.6.2-linux-x86_64.tar.gz
+RUN tar xvf filebeat-oss-7.6.2-linux-x86_64.tar.gz
 RUN mv filebeat-7.6.2-linux-x86_64 filebeat && mv filebeat /usr/share
-
 WORKDIR /usr/share/filebeat
+ADD ./deployments/filebeat/filebeat.yml filebeat.yml
+
 CMD ["./filebeat", "-e", "-c", "filebeat.yml"].

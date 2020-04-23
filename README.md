@@ -8,7 +8,7 @@ This is a playground for misc. go frameworks usable in a production system.
 
 # Next steps
 
-- [ ] filebeat docker file
-- [ ] Enable log rotation
+- [ ] Add a functional endpoint
+- [ ] Think about keycloak?
 - [ ] manual K8s deployment
 - [ ] automatic K8 deployment over Travis CI
