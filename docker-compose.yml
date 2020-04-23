@@ -18,6 +18,8 @@ services:
             # dockerfile: Dockerfile-filebeat
         image: docker.elastic.co/beats/filebeat-oss:7.6.2
         user: root
+        environment:
+            - SEMATEXT_TOKEN=${SEMATEXT_TOKEN}
         volumes:
             - type: bind
               source: ./deployments/filebeat/filebeat.yml
@@ -34,7 +36,3 @@ volumes:
     logs:
     filebeat-data:
 
-
-# -----------------------------------------------------------------------------------------------------
-# -v $(pwd)/deployments/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml \
-# -v $(pwd)/logs:/logs \

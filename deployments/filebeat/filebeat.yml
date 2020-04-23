@@ -43,4 +43,4 @@ output:
     hosts: ["https://logsene-receiver.eu.sematext.com:443"]
     protocol: https
     # TODO Will be removed and replaced later
-    index: "5f8c7021-e54a-48cf-86af-669696fb804c"
+    index: "${SEMATEXT_TOKEN}"
