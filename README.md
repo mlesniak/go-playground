@@ -8,6 +8,7 @@ This is a playground for miscellaneous go frameworks usable in a production syst
 
 # Next steps
 
+- [ ] Environment variable for index 
 - [ ] filebeat docker file
 - [ ] Enable log rotation
 - [ ] manual K8s deployment
