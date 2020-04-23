@@ -44,9 +44,10 @@ func initializeLogging() {
 	formatter := &log.JSONFormatter{
 	  	FieldMap: log.FieldMap{
 			 log.FieldKeyTime:  "@timestamp",
-			 log.FieldKeyLevel: "@level",
-			 log.FieldKeyMsg:   "@message",
+			 log.FieldKeyLevel: "level",
+			 log.FieldKeyMsg:   "message",
 	   },
 	}
+	log.SetOutput(os.Stdout)
 	log.SetFormatter(formatter)
 }
