@@ -1,6 +1,8 @@
 version: "3.3"
 services:
     main:
+        labels:
+        - filebeat
         image: mlesniak/go-demo:latest
         ports:
             - 8080:8080
@@ -10,18 +12,21 @@ services:
               target: /app/logs
 
     filebeat:
+        # We should build our own docker container here with filebeat.yml.
         # build:
             # context: .
             # dockerfile: Dockerfile-filebeat
         image: docker.elastic.co/beats/filebeat-oss:7.6.2
-        # We should build  a docker container here.
+        user: root
         volumes:
             - type: bind
               source: ./deployments/filebeat/filebeat.yml
               target: /usr/share/filebeat/filebeat.yml
-            - type: volume
-              source: logs
-              target: /logs
+
+            # Access stdout containers
+            - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+            - /var/run/docker.sock:/var/run/docker.sock
+
             # Persist filebeat data to prevent data duplication
             - filebeat-data:/usr/share/filebeat/data/
 

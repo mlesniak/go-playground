@@ -5,7 +5,8 @@ RUN apk update && apk add upx
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o main cmd/go-demo/main.go
+# RUN CGO_ENABLED=0 GOOS=linux go build -o maincmd/go-demo/main.go
+RUN go build -o main cmd/go-demo/main.go
 RUN upx main
 
 # ----------------------------------------------------

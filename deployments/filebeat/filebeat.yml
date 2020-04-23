@@ -1,36 +1,25 @@
 # See https://stackoverflow.com/questions/57836793/mysterious-filebeat-7-x-pack-issue-using-docker-image
-setup.ilm.enabled: false
+#  setup.ilm.enabled: false
+
+logging.metrics.enabled: false
+logging.level: debug
 
 filebeat.inputs:
-  # - type: log
-  #   enabled: true
-  #   paths:
-  #     - /logs/*.log.json
-  #   json.keys_under_root: true
-  #   json.add_error_key: true
-  - type: docker
-    combine_partial: true
-    containers:
-      path: "/var/lib/docker/containers"
-      stream: "stdout"
-      ids:
-        - "*"
+  - type: container
+    paths:
+    - /var/lib/docker/containers/*/*.log
 
-processors:
-  - rename:
-      fields:
-        - from: host
-          to: host_object
-setup.template:
-  enabled: false
-  overwrite: false
+# output:
+#   # For debugging. Disable later...
+#   # console:
+#     # pretty: true
+#   elasticsearch:
+#     hosts: ["https://logsene-receiver.eu.sematext.com:443"]
+#     protocol: https
+#     # TODO Will be removed and replaced later
+#     index: "5f8c7021-e54a-48cf-86af-669696fb804c"
 
-output:
-  # For debugging. Disable later...
-  # console:
-    # pretty: true
-  elasticsearch:
-    hosts: ["https://logsene-receiver.eu.sematext.com:443"]
-    protocol: https
-    # TODO Will be removed and replaced later
-    index: "5f8c7021-e54a-48cf-86af-669696fb804c"
+output.console:
+  pretty: true
+  enabled: true
+
