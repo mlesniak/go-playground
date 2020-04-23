@@ -4,7 +4,7 @@
 
 # Overview
 
-This is a playground for miscellaneous go frameworks usable in a production system.
+This is a playground for misc. go frameworks usable in a production system.
 
 # Next steps
 
