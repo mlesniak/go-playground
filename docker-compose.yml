@@ -2,7 +2,7 @@ version: "3.3"
 services:
     main:
         labels:
-        - log
+            'log': 'true'
         image: mlesniak/go-demo:latest
         ports:
             - 8080:8080

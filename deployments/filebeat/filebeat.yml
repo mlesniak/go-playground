@@ -14,8 +14,8 @@ filebeat.autodiscover:
     - type: docker
       templates:
         - condition:
-            contains:
-              docker.container.image: mlesniak/go-demo
+            equals:
+              docker.container.labels.log: 'true'
           config:
             - type: container
               json.keys_under_root: true
