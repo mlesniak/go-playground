@@ -1,13 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 
 	// "github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/echo/v4"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -27,7 +25,7 @@ func serve() {
 	})
 
 	log.Info("Application started")
-	e.Start(":8080")
+	log.Info(e.Start(":8080"))
 }
 
 // Message returns a greeting string.
@@ -43,21 +41,13 @@ func initializeLogging() {
 		return
 	}
 
-	// Create directory.
-	err := os.MkdirAll("logs", 0777)
-	if err != nil {
-		panic("Unable to create logging directory")
-	}
-
-	// Create logfile.
-	const logfile = "logs/main.log.json"
-	file, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		fmt.Println(err)
-		panic("Unable to create logfile")
-	}
-	log.SetOutput(file)
-
 	// Set to JSON.
-	log.SetFormatter(&logrus.JSONFormatter{})
+	formatter := &log.JSONFormatter{
+	  	FieldMap: log.FieldMap{
+			 log.FieldKeyTime:  "@timestamp",
+			 log.FieldKeyLevel: "@level",
+			 log.FieldKeyMsg:   "@message",
+	   },
+	}
+	log.SetFormatter(formatter)
 }
