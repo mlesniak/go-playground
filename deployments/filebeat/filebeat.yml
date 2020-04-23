@@ -2,12 +2,19 @@
 setup.ilm.enabled: false
 
 filebeat.inputs:
-  - type: log
-    enabled: true
-    paths:
-      - /logs/*.log.json
-    json.keys_under_root: true
-    json.add_error_key: true
+  # - type: log
+  #   enabled: true
+  #   paths:
+  #     - /logs/*.log.json
+  #   json.keys_under_root: true
+  #   json.add_error_key: true
+  - type: docker
+    combine_partial: true
+    containers:
+      path: "/var/lib/docker/containers"
+      stream: "stdout"
+      ids:
+        - "*"
 
 processors:
   - rename:
