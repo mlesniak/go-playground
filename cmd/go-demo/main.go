@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/labstack/echo/v4"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 type request struct {
@@ -14,6 +14,21 @@ type request struct {
 
 type response struct {
 	Number int `json:"number"`
+}
+
+// Set global field values for log entry. According to https://github.com/sirupsen/logrus and
+// e.g. https://github.com/sirupsen/logrus/pull/653#issuecomment-339763585, we might use our
+// own log package in the future.
+var log *logrus.Entry
+func init() {
+	commit := os.Getenv("COMMIT")
+	if commit == "" {
+		logrus.Warn("Environment variable 'commit' not set, unable to record hash in every log")
+		log = logrus.NewEntry(logrus.New())
+		return
+	}
+
+	log = logrus.WithFields(logrus.Fields{"commit":commit})
 }
 
 func main() {
@@ -60,13 +75,13 @@ func initializeLogging() {
 	}
 
 	// Set to JSON.
-	formatter := &log.JSONFormatter{
-	  	FieldMap: log.FieldMap{
-			 log.FieldKeyTime:  "@timestamp",
-			 log.FieldKeyLevel: "level",
-			 log.FieldKeyMsg:   "message",
+	formatter := &logrus.JSONFormatter{
+	  	FieldMap: logrus.FieldMap{
+			 logrus.FieldKeyTime:  "@timestamp",
+			 logrus.FieldKeyLevel: "level",
+			 logrus.FieldKeyMsg:   "message",
 	   },
 	}
-	log.SetOutput(os.Stdout)
-	log.SetFormatter(formatter)
+	logrus.SetOutput(os.Stdout)
+	logrus.SetFormatter(formatter)
 }

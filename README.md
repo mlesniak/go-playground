@@ -8,9 +8,9 @@ This is a playground for misc. go frameworks usable in a production system.
 
 # Next steps
 
-- [ ] Record git commit hash on docker build and show in log
 - [ ] manual K8s deployment
-- [ ] Easy way for automatic restart
 - [ ] Think about keycloak?
 - [ ] Add integration tests
+- [ ] Extract log package
+- [ ] Extract computation service
 - [ ] automatic K8 deployment over Travis CI
