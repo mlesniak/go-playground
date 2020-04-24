@@ -8,6 +8,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type request struct {
+	Number int `json:"number"`
+}
+
+type response struct {
+	Number int `json:"number"`
+}
+
 func main() {
 	initializeLogging()
 	serve()
@@ -19,8 +27,19 @@ func serve() {
 	e.HidePort = true
 
 	e.GET("/", func(c echo.Context) error {
-		log.Info("Demo logging context")
 		return c.String(http.StatusOK, Message())
+	})
+
+	e.POST("/api", func(c echo.Context) error {
+		var json request
+		err := c.Bind(&json)
+		if err != nil {
+			log.WithField("error", err).Warn("Unable to parse json")
+			return c.String(http.StatusBadRequest, "Unable to parse request")
+		}
+		log.WithField("number", json.Number).Info("Request received")
+		resp := response{json.Number+1}
+		return c.JSON(http.StatusOK, resp)
 	})
 
 	log.Info("Application started")
@@ -29,7 +48,7 @@ func serve() {
 
 // Message returns a greeting string.
 func Message() string {
-	return "Hello, world"
+	return "OK"
 }
 
 func initializeLogging() {

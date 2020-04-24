@@ -8,7 +8,8 @@ This is a playground for misc. go frameworks usable in a production system.
 
 # Next steps
 
-- [ ] Add a functional endpoint
-- [ ] Think about keycloak?
+- [ ] Record git commit hash on docker build and show in log
 - [ ] manual K8s deployment
+- [ ] Easy way for automatic restart
+- [ ] Think about keycloak?
 - [ ] automatic K8 deployment over Travis CI
