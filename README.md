@@ -12,4 +12,5 @@ This is a playground for misc. go frameworks usable in a production system.
 - [ ] manual K8s deployment
 - [ ] Easy way for automatic restart
 - [ ] Think about keycloak?
+- [ ] Add integration tests
 - [ ] automatic K8 deployment over Travis CI
