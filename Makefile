@@ -17,8 +17,9 @@ run:
 	go run .
 
 docker:
-	docker build -t mlesniak/go-demo .
+	docker-compose build
+	docker build --build-arg COMMIT=`git rev-parse HEAD` -t mlesniak/go-demo .
 
 docker-run:
-	docker run --rm -it -p 8080:8080 mlesniak/go-demo
+	docker-compose up
 
