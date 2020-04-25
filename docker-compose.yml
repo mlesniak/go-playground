@@ -12,9 +12,7 @@ services:
               target: /app/logs
 
     filebeat:
-        build:
-            context: .
-            dockerfile: Dockerfile-filebeat
+        image: mlesniak/filebeat
         user: root
         environment:
             - SEMATEXT_TOKEN=${SEMATEXT_TOKEN}
