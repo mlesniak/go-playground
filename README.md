@@ -9,6 +9,7 @@ This is a playground for misc. go frameworks usable in a production system.
 # Next steps
 
 - [ ] manual K8s deployment
+- [ ] JWT middleware in echo?
 - [ ] Think about keycloak?
 - [ ] Add integration tests
 - [ ] Extract log package
