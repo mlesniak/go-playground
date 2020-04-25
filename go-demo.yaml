@@ -34,6 +34,12 @@ spec:
       containers:
       - name: go-demo
         image: docker.io/mlesniak/go-demo
+        env:
+        - name: SEMATEXT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: sematext-token
+              key: token
         ports:
           - containerPort: 8080
         resources:

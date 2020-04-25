@@ -8,8 +8,14 @@ This is a playground for misc. go frameworks usable in a production system.
 
     http mlesniak.dev/api numbers:=10
 
+
+# Add secret logging token
+
+    echo -n "TOKEN"|kubectl create secret generic sematext-token --from-file=token=/dev/stdin
+
 # Next steps
 
+- [ ] Add Kubernetes secret
 - [ ] add nginx for subdomains in k8
 - [ ] JWT middleware in echo?
 - [ ] Think about keycloak?
