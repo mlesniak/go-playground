@@ -15,7 +15,7 @@ This is a playground for misc. go frameworks usable in a production system.
 
 # Next steps
 
-- [ ] Add Kubernetes secret
+- [ ] Add filebeat for log submission
 - [ ] add nginx for subdomains in k8
 - [ ] JWT middleware in echo?
 - [ ] Think about keycloak?
