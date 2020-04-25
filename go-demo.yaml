@@ -1,6 +1,20 @@
 # Main configuration file for our DigitalOcean (mamaged) kubernetes cluster.
 
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-demo-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: demo
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
