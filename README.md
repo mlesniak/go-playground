@@ -6,9 +6,11 @@
 
 This is a playground for misc. go frameworks usable in a production system.
 
+    http mlesniak.dev/api numbers:=10
+
 # Next steps
 
-- [ ] manual K8s deployment
+- [ ] add nginx for subdomains in k8
 - [ ] JWT middleware in echo?
 - [ ] Think about keycloak?
 - [ ] Add integration tests
