@@ -3,17 +3,16 @@ logging.level: info
 
 filebeat.autodiscover:
   providers:
-    - type: docker
+    - type: kubernetes
       templates:
-        - condition:
-            equals:
-              docker.container.labels.log: "true"
-          config:
-            - type: container
-              json.keys_under_root: true
-              json.add_error_key: true
-              paths:
-                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+        # - condition.equals:
+        #     kubernetes.labels.log: "true"
+        - config:
+            type: container
+            json.keys_under_root: true
+            json.add_error_key: true
+            paths:
+              - /var/log/containers/*-${data.kubernetes.container.id}.log
 
 processors:
   - drop_fields:

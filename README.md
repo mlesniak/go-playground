@@ -9,13 +9,27 @@ This is a playground for misc. go frameworks usable in a production system.
     http mlesniak.dev/api numbers:=10
 
 
-# Add secret logging token
+## Add secret logging token
 
     echo -n "TOKEN"|kubectl create secret generic sematext-token --from-file=token=/dev/stdin
+
+
+## Enable filebeat kubernetes authentication
+
+Given the error message
+
+    Failed to list *v1.Pod: pods is forbidden: User "system:serviceaccount:default:default" cannot list resource "pods" in API group "" at the cluster scope
+
+execute
+
+    kubectl create clusterrolebinding default-view --clusterrole=view --serviceaccount=default:default
+
 
 # Next steps
 
 - [ ] Add filebeat for log submission
+- [ ] Use configmap for filebeat.yml (see [https://github.com/elastic/beats/blob/master/deploy/kubernetes/filebeat-kubernetes.yaml](here))
+- [ ] Add persistence storage for filebeat over PVC/BlockStorage in K8s
 - [ ] add nginx for subdomains in k8
 - [ ] JWT middleware in echo?
 - [ ] Think about keycloak?

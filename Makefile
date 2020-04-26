@@ -18,11 +18,11 @@ run:
 
 docker:
 	docker build -f Dockerfile-filebeat -t mlesniak/filebeat .
-	docker build --build-arg COMMIT=`git rev-parse HEAD` -t mlesniak/go-demo .
+	#docker build --build-arg COMMIT=`git rev-parse HEAD` -t mlesniak/go-demo .
 
 push:
 	docker push mlesniak/filebeat
-	docker push mlesniak/go-demo
+	#docker push mlesniak/go-demo
 
 docker-run:
 	docker-compose up

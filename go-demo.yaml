@@ -15,6 +15,177 @@ spec:
       targetPort: 8080
 
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-config
+data:
+  filebeat.yml: |-
+    logging.metrics.enabled: false
+    logging.level: info
+
+    # filebeat.autodiscover:
+    #   providers:
+    #     - type: kubernetes
+    #       templates:
+    #         # - condition.equals:
+    #         #     data.kubernetes.labels.log: "true"
+    #         - config:
+    #             input:
+    #               type: docker
+    #               containers.ids:
+    #                 - ${data.kubernetes.container.id}
+    #             # type: container
+    #             # json.keys_under_root: true
+    #             # json.add_error_key: true
+    #             # paths:
+    #             #   - /var/log/containers/*-${data.kubernetes.container.id}.log
+
+    filebeat.inputs:
+      - type: container
+        paths:
+          - /var/lib/docker/containers/*.log
+
+    processors:
+      - drop_fields:
+          fields:
+            [
+              "stream",
+              "log",
+              "input",
+              "agent",
+              "docker",
+              "metadata",
+              "ecs",
+              "container",
+            ]
+
+      # From Sematext documentation
+      - rename:
+          fields:
+            - from: host
+              to: host_object
+    setup.template:
+      enabled: false
+      overwrite: false
+
+    output.console:
+      pretty: true
+    # output:
+    #   elasticsearch:
+    #     hosts: ["https://logsene-receiver.eu.sematext.com:443"]
+    #     protocol: https
+    #     index: "${SEMATEXT_TOKEN}"
+
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: filebeat-dynamic
+  namespace: kube-system
+  labels:
+    k8s-app: filebeat-dynamic
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: filebeat
+spec:
+  selector:
+    matchLabels:
+      name: filebeat
+  template:
+    metadata:
+      labels:
+        name: filebeat
+    spec:
+      containers:
+      - name: filebeat-dynamic
+        image: docker.elastic.co/beats/filebeat-oss:7.6.2
+        securityContext:
+          runAsUser: 0
+
+        env:
+        - name: SEMATEXT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: sematext-token
+              key: token
+        volumeMounts:
+        - name: socket
+          mountPath: /var/run/docker.sock
+        - name: logfiles
+          mountPath: /var/lib/docker/containers
+        # - name: host-log
+        #   mountPath: /var/log/containers
+        # - name: host-log-var
+        #   mountPath: /var/log/pods
+        - name: config-volume
+          mountPath: /usr/share/filebeat/filebeat.yml
+          subPath: filebeat.yml
+
+
+      volumes:
+      - name: config-volume
+        configMap:
+          name: filebeat-config
+      - name: socket
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+      - name: host-log
+        hostPath:
+          path: /var/log/containers
+          type: Directory
+      - name: host-log-var
+        hostPath:
+          path: /var/log/pods/
+          type: Directory
+      - name: logfiles
+        hostPath:
+          path: /var/lib/docker/containers
+          type: Directory
+      # volumes:
+            # Access stdout containers
+            # - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+            # - /var/run/docker.sock:/var/run/docker.sock
+
+            # Persist filebeat data to prevent data duplication
+            #- filebeat-data:/usr/share/filebeat/data/
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: filebeat-dynamic
+subjects:
+- kind: ServiceAccount
+  name: filebeat-dynamic
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: filebeat-dynamic
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: filebeat-dynamic
+  labels:
+    k8s-app: filebeat-dynamic
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources:
+  - namespaces
+  - pods
+  verbs:
+  - get
+  - watch
+  - list
+
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,6 +201,7 @@ spec:
     metadata:
         labels:
           app: demo
+          log: "true"
     spec:
       containers:
       - name: go-demo
