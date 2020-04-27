@@ -24,6 +24,9 @@ execute
 
     kubectl create clusterrolebinding default-view --clusterrole=view --serviceaccount=default:default
 
+Note: the creation of the role is now executed in the `yaml` file, but since it was quite difficult to find information about this problem
+online I leave it here for now.
+
 
 # Next steps
 
