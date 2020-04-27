@@ -1,4 +1,34 @@
 # Main configuration file for our DigitalOcean (mamaged) kubernetes cluster.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-demo
+  labels:
+    app: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo
+  template:
+    metadata:
+      labels:
+        app: demo
+        log: "true"
+    spec:
+      containers:
+        - name: go-demo
+          image: docker.io/mlesniak/go-demo
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "10M"
+            limits:
+              cpu: "1000m"
+              memory: "128M"
 
 ---
 apiVersion: v1
@@ -14,6 +44,7 @@ spec:
       port: 80
       targetPort: 8080
 
+# ---------------------------------------------------------------------------------------------------
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -24,27 +55,17 @@ data:
     logging.metrics.enabled: false
     logging.level: info
 
-    # filebeat.autodiscover:
-    #   providers:
-    #     - type: kubernetes
-    #       templates:
-    #         # - condition.equals:
-    #         #     data.kubernetes.labels.log: "true"
-    #         - config:
-    #             input:
-    #               type: docker
-    #               containers.ids:
-    #                 - ${data.kubernetes.container.id}
-    #             # type: container
-    #             # json.keys_under_root: true
-    #             # json.add_error_key: true
-    #             # paths:
-    #             #   - /var/log/containers/*-${data.kubernetes.container.id}.log
-
-    filebeat.inputs:
-      - type: container
-        paths:
-          - /var/lib/docker/containers/*.log
+    filebeat.autodiscover:
+      providers:
+        - type: docker
+          templates:
+            - condition:
+                equals:
+                  docker.container.labels.log: "true"
+              config:
+              - type: container
+                paths:
+                  - /var/lib/docker/containers/${data.docker.container.id}/*.log
 
     processors:
       - drop_fields:
@@ -77,16 +98,6 @@ data:
     #     protocol: https
     #     index: "${SEMATEXT_TOKEN}"
 
-
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: filebeat-dynamic
-  namespace: kube-system
-  labels:
-    k8s-app: filebeat-dynamic
-
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -102,123 +113,78 @@ spec:
         name: filebeat
     spec:
       containers:
-      - name: filebeat-dynamic
-        image: docker.elastic.co/beats/filebeat-oss:7.6.2
-        securityContext:
-          runAsUser: 0
+        - name: filebeat-dynamic
+          image: docker.elastic.co/beats/filebeat-oss:7.6.2
+          securityContext:
+            runAsUser: 0
 
-        env:
-        - name: SEMATEXT_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: sematext-token
-              key: token
-        volumeMounts:
-        - name: socket
-          mountPath: /var/run/docker.sock
-        - name: logfiles
-          mountPath: /var/lib/docker/containers
-        # - name: host-log
-        #   mountPath: /var/log/containers
-        # - name: host-log-var
-        #   mountPath: /var/log/pods
-        - name: config-volume
-          mountPath: /usr/share/filebeat/filebeat.yml
-          subPath: filebeat.yml
-
+          env:
+            - name: SEMATEXT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: sematext-token
+                  key: token
+          volumeMounts:
+            - name: socket
+              mountPath: /var/run/docker.sock
+            - name: logfiles
+              mountPath: /var/lib/docker/containers
+            - name: config-volume
+              mountPath: /usr/share/filebeat/filebeat.yml
+              subPath: filebeat.yml
 
       volumes:
-      - name: config-volume
-        configMap:
-          name: filebeat-config
-      - name: socket
-        hostPath:
-          path: /var/run/docker.sock
-          type: Socket
-      - name: host-log
-        hostPath:
-          path: /var/log/containers
-          type: Directory
-      - name: host-log-var
-        hostPath:
-          path: /var/log/pods/
-          type: Directory
-      - name: logfiles
-        hostPath:
-          path: /var/lib/docker/containers
-          type: Directory
+        - name: config-volume
+          configMap:
+            name: filebeat-config
+        - name: socket
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket
+        - name: logfiles
+          hostPath:
+            path: /var/lib/docker/containers
+            type: Directory
       # volumes:
-            # Access stdout containers
-            # - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
-            # - /var/run/docker.sock:/var/run/docker.sock
-
-            # Persist filebeat data to prevent data duplication
-            #- filebeat-data:/usr/share/filebeat/data/
+      # Access stdout containers
+      # - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+      # - /var/run/docker.sock:/var/run/docker.sock
+      # Persist filebeat data to prevent data duplication
+      #- filebeat-data:/usr/share/filebeat/data/
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: filebeat-dynamic
-subjects:
-- kind: ServiceAccount
-  name: filebeat-dynamic
-  namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: filebeat-dynamic
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: filebeat-dynamic
-  labels:
-    k8s-app: filebeat-dynamic
-rules:
-- apiGroups: [""] # "" indicates the core API group
-  resources:
-  - namespaces
-  - pods
-  verbs:
-  - get
-  - watch
-  - list
-
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: go-demo
-  labels:
-    app: demo
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: demo
-  template:
-    metadata:
-        labels:
-          app: demo
-          log: "true"
-    spec:
-      containers:
-      - name: go-demo
-        image: docker.io/mlesniak/go-demo
-        env:
-        - name: SEMATEXT_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: sematext-token
-              key: token
-        ports:
-          - containerPort: 8080
-        resources:
-          requests:
-            cpu: "100m"
-            memory: "10M"
-          limits:
-            cpu: "1000m"
-            memory: "128M"
-
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRoleBinding
+# metadata:
+#   name: filebeat
+# subjects:
+#   - kind: ServiceAccount
+#     name: filebeat
+#     namespace: kube-system
+# roleRef:
+#   kind: ClusterRole
+#   name: filebeat
+#   apiGroup: rbac.authorization.k8s.io
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRole
+# metadata:
+#   name: filebeat
+#   labels:
+#     k8s-app: filebeat
+# rules:
+#   - apiGroups: [""] # "" indicates the core API group
+#     resources:
+#       - namespaces
+#       - pods
+#     verbs:
+#       - get
+#       - watch
+#       - list
+# ---
+# apiVersion: v1
+# kind: ServiceAccount
+# metadata:
+#   name: filebeat
+#   namespace: kube-system
+#   labels:
+#     k8s-app: filebeat
