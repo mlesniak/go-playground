@@ -30,7 +30,6 @@ online I leave it here for now.
 
 # Next steps
 
-- [ ] Add persistence storage for filebeat over PVC/BlockStorage in K8s
 - [ ] add nginx for subdomains in k8
 - [ ] JWT middleware in echo?
 - [ ] Think about keycloak?
