@@ -27,8 +27,6 @@ execute
 
 # Next steps
 
-- [ ] Add filebeat for log submission
-- [ ] Use configmap for filebeat.yml (see [https://github.com/elastic/beats/blob/master/deploy/kubernetes/filebeat-kubernetes.yaml](here))
 - [ ] Add persistence storage for filebeat over PVC/BlockStorage in K8s
 - [ ] add nginx for subdomains in k8
 - [ ] JWT middleware in echo?
