@@ -36,7 +36,6 @@ kind: Service
 metadata:
   name: go-demo-service
 spec:
-  type: LoadBalancer
   selector:
     app: demo
   ports:

@@ -1,0 +1,65 @@
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.14.2
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "20M"
+            limits:
+              cpu: "1000m"
+              memory: "128M"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/nginx/conf.d/
+      volumes:
+        - name: config-volume
+          configMap:
+            name: nginx-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  default.conf: |-
+    server {
+        listen       80;
+        server_name api.mlesniak.dev;
+        location / {
+            proxy_pass http://go-demo-service:80;
+        }
+
+        # ssl on;
+        # ssl_certificate     /etc/ssl/local/fullchain.pem;
+        # ssl_certificate_key /etc/ssl/local/privkey.pem;
+    }
