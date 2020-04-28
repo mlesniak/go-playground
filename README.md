@@ -30,7 +30,7 @@ online I leave it here for now.
 
 # Next steps
 
-- [ ] add nginx for subdomains in k8
+- [ ] add SSL termination for endpoints
 - [ ] Split and move K8 configuration
 - [ ] JWT middleware in echo?
 - [ ] Think about keycloak?

@@ -58,8 +58,12 @@ data:
         location / {
             proxy_pass http://go-demo-service:80;
         }
+    }
 
-        # ssl on;
-        # ssl_certificate     /etc/ssl/local/fullchain.pem;
-        # ssl_certificate_key /etc/ssl/local/privkey.pem;
+      server {
+        listen       80;
+        server_name foo.mlesniak.dev;
+        location / {
+            proxy_pass http://spiegel.de:80;
+        }
     }
