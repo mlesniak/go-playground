@@ -53,6 +53,13 @@ metadata:
 data:
   default.conf: |-
     server {
+      listen 80 default_server;
+      listen [::]:80 default_server;
+      server_name _;
+      return 404;
+    }
+
+    server {
         listen       80;
         server_name api.mlesniak.dev;
         location / {
