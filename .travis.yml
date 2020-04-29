@@ -1,3 +1,6 @@
+set -e
+set -x
+
 language: go
 go:  "1.13"
 
