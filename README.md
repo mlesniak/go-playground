@@ -9,6 +9,10 @@ This is a playground for misc. go frameworks usable in a production system.
     http mlesniak.dev/api numbers:=10
 
 
+## Add loadbalancer forwarding rule in Digital Ocean for HTTPS access
+
+![screenshot](docs/loadbalancer-rules.png)
+
 ## Add secret logging token
 
     echo -n "TOKEN"|kubectl create secret generic sematext-token --from-file=token=/dev/stdin
