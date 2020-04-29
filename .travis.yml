@@ -9,17 +9,15 @@ go:  "1.13"
 #     go mod download
 #     go build .
 
-script:
-  make dependencies build docker
-  echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-  docker push mlesniak/go-demo
+# script:
+#   make dependencies build docker
+#   echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+#   docker push mlesniak/go-demo
 
 
-# deploy:
-#   provider: script
-#   script: bash scripts/docker-push.sh
-#   on:
-#     branch: master
+deploy:
+  provider: script
+  script: bash scripts/docker-push.sh
 
 #docker push
 #trigger k8s deployment
