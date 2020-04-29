@@ -1,0 +1,179 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: filebeat
+spec:
+  selector:
+    matchLabels:
+      name: filebeat
+  template:
+    metadata:
+      labels:
+        name: filebeat
+    spec:
+      containers:
+        - name: filebeat-dynamic
+          image: docker.elastic.co/beats/filebeat-oss:7.6.2
+          securityContext:
+            runAsUser: 0
+
+          env:
+            - name: SEMATEXT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: sematext-token
+                  key: token
+          volumeMounts:
+            # TODO necessary to mount socket?
+            - name: socket
+              mountPath: /var/run/docker.sock
+            - name: logfiles
+              mountPath: /var/lib/docker/containers
+            - name: config-volume
+              mountPath: /usr/share/filebeat/filebeat.yml
+              subPath: filebeat.yml
+            - mountPath: "/usr/share/filebeat/data"
+              name: pvc
+      volumes:
+        - name: config-volume
+          configMap:
+            name: filebeat-config
+        - name: socket
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket
+        - name: logfiles
+          hostPath:
+            path: /var/lib/docker/containers
+            type: Directory
+        - name: pvc
+          persistentVolumeClaim:
+            claimName: filebeat-pvc
+
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: filebeat-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: do-block-storage
+
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default-view
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: filebeat
+subjects:
+  - kind: ServiceAccount
+    name: filebeat
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: filebeat
+  apiGroup: rbac.authorization.k8s.io
+
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: filebeat
+  labels:
+    name: filebeat
+rules:
+  - apiGroups: [""] # "" indicates the core API group
+    resources:
+      - namespaces
+      - pods
+    verbs:
+      - get
+      - watch
+      - list
+
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: filebeat
+  namespace: kube-system
+  labels:
+    name: filebeat
+
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-config
+data:
+  filebeat.yml: |-
+    logging.metrics.enabled: false
+    logging.level: info
+
+    filebeat.autodiscover:
+      providers:
+        - type: kubernetes
+          templates:
+            - condition:
+                equals:
+                  kubernetes.labels.log: "true"
+              config:
+              - type: container
+                json.keys_under_root: true
+                json.add_error_key: true
+                paths:
+                - /var/lib/docker/containers/${data.kubernetes.container.id}/*.log
+
+    processors:
+      - drop_fields:
+          fields:
+            [
+              "stream",
+              "log",
+              "input",
+              "agent",
+              "docker",
+              "metadata",
+              "ecs",
+              "container",
+            ]
+
+      # From Sematext documentation
+      - rename:
+          fields:
+            - from: host
+              to: host_object
+    setup.template:
+      enabled: false
+      overwrite: false
+
+    #output.console:
+    #  pretty: true
+    output:
+      elasticsearch:
+        hosts: ["https://logsene-receiver.eu.sematext.com:443"]
+        protocol: https
+        index: "${SEMATEXT_TOKEN}"

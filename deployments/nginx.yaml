@@ -31,6 +31,8 @@ spec:
         - name: config-volume
           configMap:
             name: nginx-config
+
+
 ---
 apiVersion: v1
 kind: Service
@@ -44,6 +46,7 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 80
+
 
 ---
 apiVersion: v1

@@ -34,10 +34,9 @@ online I leave it here for now.
 
 # Next steps
 
-- [ ] Split and move K8 configuration
+- [ ] automatic K8 deployment over Travis CI
 - [ ] JWT middleware in echo?
 - [ ] Think about keycloak?
 - [ ] Add integration tests
 - [ ] Extract log package
 - [ ] Extract computation service
-- [ ] automatic K8 deployment over Travis CI
