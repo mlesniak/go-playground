@@ -6,7 +6,7 @@
 
 This is a playground for misc. go frameworks usable in a production system.
 
-    http mlesniak.dev/api numbers:=10
+    http https://api.mlesniak.dev/api number:=30
 
 
 ## Add loadbalancer forwarding rule in Digital Ocean for HTTPS access
