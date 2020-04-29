@@ -1,6 +1,6 @@
 # Dummy comment to trigger github build push
-set -e
-set -x
+# set -e
+# set -x
 
 language: go
 go:  "1.13"
@@ -9,11 +9,17 @@ go:  "1.13"
 #     go mod download
 #     go build .
 
-deploy:
-  provider: script
-  script: bash scripts/docker-push.sh
-  on:
-    branch: master
+script:
+  make dependencies build docker
+  echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  docker push mlesniak/go-demo
+
+
+# deploy:
+#   provider: script
+#   script: bash scripts/docker-push.sh
+#   on:
+#     branch: master
 
 #docker push
 #trigger k8s deployment
