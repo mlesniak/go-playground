@@ -4,3 +4,15 @@ go:  "1.13"
 # script:
 #     go mod download
 #     go build .
+
+deploy:
+  provider: script
+  script: bash scripts/docker-push.sh
+  on:
+    branch: master
+
+#docker push
+#trigger k8s deployment
+#https://www.kevinsimper.dk/posts/trigger-a-redeploy-in-kubernetes
+#kubectl patch deployment go-demo -p "{\"spec\": {\"template\": {\"metadata\": { \"labels\": {  \"redeploy\": \"$(date +%s)\"}}}}}"
+#docker image mit kubectl / config / mounted file und dann ab

@@ -34,7 +34,9 @@ online I leave it here for now.
 
 # Next steps
 
+- [ ] Push image to docker registry from CI/CD
 - [ ] automatic K8 deployment over Travis CI
+- [ ] Rename k8.container.name to service
 - [ ] JWT middleware in echo?
 - [ ] Think about keycloak?
 - [ ] Add integration tests
