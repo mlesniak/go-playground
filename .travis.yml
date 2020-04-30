@@ -8,3 +8,5 @@ go:  "1.13"
 deploy:
   provider: script
   script: bash scripts/deploy.sh
+  on:
+    branch: production

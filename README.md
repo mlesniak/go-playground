@@ -41,3 +41,4 @@ online I leave it here for now.
 - [ ] JWT middleware in echo?
 - [ ] Think about keycloak?
 - [ ] Add integration tests
+
