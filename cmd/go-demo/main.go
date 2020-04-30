@@ -36,6 +36,10 @@ func main() {
 	serve()
 }
 
+type foo struct {
+	Version string `json:"version"`
+}
+
 func serve() {
 	e := echo.New()
 	e.HideBanner = true
@@ -43,6 +47,16 @@ func serve() {
 
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, Message())
+	})
+
+	// Endpoint to check correct deployment.
+	e.GET("/api/version", func(c echo.Context) error {
+		log.Info("Version info requested")
+		commit := os.Getenv("COMMIT")
+		if commit == "" {
+			commit = "<No COMMIT environment variable set>"
+		}
+		return c.JSON(http.StatusOK, foo{commit})
 	})
 
 	e.POST("/api", func(c echo.Context) error {

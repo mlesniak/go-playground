@@ -34,6 +34,7 @@ online I leave it here for now.
 
 # Next steps
 
+- [ ] Add /version endpoint to check success of deployment
 - [ ] automatic K8 deployment over Travis CI
 - [ ] Add necessary environment variables
 - [ ] JWT middleware in echo?
