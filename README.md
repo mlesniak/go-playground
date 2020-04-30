@@ -34,11 +34,10 @@ online I leave it here for now.
 
 # Next steps
 
-- [ ] Add /version endpoint to check success of deployment
-- [ ] automatic K8 deployment over Travis CI
-- [ ] Add necessary environment variables
+- [ ] Use dedicated branch for deployment and deploy only, if a commit is in this branch
+- [ ] Rename kubernetes.container.name to service in log files (using filebeat configuration)
+- [ ] Extract log package
+- [ ] Extract computation service
 - [ ] JWT middleware in echo?
 - [ ] Think about keycloak?
 - [ ] Add integration tests
-- [ ] Extract log package
-- [ ] Extract computation service
