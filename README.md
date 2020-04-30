@@ -34,7 +34,6 @@ online I leave it here for now.
 
 # Next steps
 
-- [ ] Use dedicated branch for deployment and deploy only, if a commit is in this branch
 - [ ] Rename kubernetes.container.name to service in log files (using filebeat configuration)
 - [ ] Extract log package
 - [ ] Extract computation service
