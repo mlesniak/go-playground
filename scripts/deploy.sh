@@ -9,6 +9,7 @@ docker push mlesniak/go-demo
 # Deploy to kubernetes by setting new image.
 sed -i -e 's|KUBE_CA_CERT|'"${KUBE_CA_CERT}"'|g'       deployments/kube-config.yaml
 sed -i -e 's|KUBE_ID|'"${KUBE_ID}"'|g'                 deployments/kube-config.yaml
+sed -i -e 's|KUBE_TOKEN|'"${KUBE_TOKEN}"'|g'           deployments/kube-config.yaml
 
 # We currently do not use $TRAVIS_BUILD_ID intentionally.
 docker run --rm \
