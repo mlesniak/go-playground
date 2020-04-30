@@ -35,7 +35,7 @@ online I leave it here for now.
 # Next steps
 
 - [ ] automatic K8 deployment over Travis CI
-- [ ] Rename k8.container.name to service
+- [ ] Add necessary environment variables
 - [ ] JWT middleware in echo?
 - [ ] Think about keycloak?
 - [ ] Add integration tests
