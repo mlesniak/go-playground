@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build new container.
-docker build --build-arg COMMIT=`git rev-parse HEAD` -t mlesniak/go-demo .
+docker build --build-arg COMMIT=`git rev-parse HEAD` -t mlesniak/go-demo:${TRAVIS_BUILD_ID} .
 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 docker push mlesniak/go-demo:${TRAVIS_BUILD_ID}
 
