@@ -19,19 +19,18 @@ type response struct {
 }
 
 func main() {
-	serve()
-}
-
-func serve() {
 	e := echo.New()
 	e.HideBanner = true
 	e.HidePort = true
 
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, Message())
-	})
+	addVersionEndpoint(e)
+	addAPIEndpoint(e)
 
-	// Endpoint to check correct deployment.
+	log.Info("Application started")
+	log.Info(e.Start(":8080"))
+}
+
+func addVersionEndpoint(e *echo.Echo) {
 	e.GET("/api/version", func(c echo.Context) error {
 		log.Info("Version info requested")
 		commit := os.Getenv("COMMIT")
@@ -42,7 +41,9 @@ func serve() {
 			Version string `json:"version"`
 		}{commit})
 	})
+}
 
+func addAPIEndpoint(e *echo.Echo) {
 	e.POST("/api", func(c echo.Context) error {
 		var json request
 		err := c.Bind(&json)
@@ -54,12 +55,4 @@ func serve() {
 		resp := response{json.Number + 1}
 		return c.JSON(http.StatusOK, resp)
 	})
-
-	log.Info("Application started")
-	log.Info(e.Start(":8080"))
-}
-
-// Message returns a greeting string.
-func Message() string {
-	return "OK"
 }
