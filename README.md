@@ -34,8 +34,7 @@ online I leave it here for now.
 
 # Next steps
 
-- [ ] Extract computation service
 - [ ] JWT middleware in echo?
-- [ ] Think about keycloak?
+- [ ] Think about keycloak integration?
 - [ ] Add integration tests
 
