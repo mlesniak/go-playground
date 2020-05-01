@@ -34,8 +34,6 @@ online I leave it here for now.
 
 # Next steps
 
-- [ ] Rename kubernetes.container.name to service in log files (using filebeat configuration)
-- [ ] Tag deployment with git hash
 - [ ] Extract log package
 - [ ] Extract computation service
 - [ ] JWT middleware in echo?
