@@ -22,10 +22,6 @@ func main() {
 	serve()
 }
 
-type foo struct {
-	Version string `json:"version"`
-}
-
 func serve() {
 	e := echo.New()
 	e.HideBanner = true
@@ -42,7 +38,9 @@ func serve() {
 		if commit == "" {
 			commit = "<No COMMIT environment variable set>"
 		}
-		return c.JSON(http.StatusOK, foo{commit})
+		return c.JSON(http.StatusOK, struct {
+			Version string `json:"version"`
+		}{commit})
 	})
 
 	e.POST("/api", func(c echo.Context) error {
@@ -53,7 +51,7 @@ func serve() {
 			return c.String(http.StatusBadRequest, "Unable to parse request")
 		}
 		log.WithField("number", json.Number).Info("Request received")
-		resp := response{json.Number+1}
+		resp := response{json.Number + 1}
 		return c.JSON(http.StatusOK, resp)
 	})
 
@@ -65,4 +63,3 @@ func serve() {
 func Message() string {
 	return "OK"
 }
-
