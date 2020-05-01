@@ -34,7 +34,6 @@ online I leave it here for now.
 
 # Next steps
 
-- [ ] Extract log package
 - [ ] Extract computation service
 - [ ] JWT middleware in echo?
 - [ ] Think about keycloak?

@@ -5,8 +5,10 @@ import (
 	"os"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sirupsen/logrus"
+	logger "github.com/mlesniak/go-demo/pkg/log"
 )
+
+var log = logger.New()
 
 type request struct {
 	Number int `json:"number"`
@@ -16,23 +18,7 @@ type response struct {
 	Number int `json:"number"`
 }
 
-// Set global field values for log entry. According to https://github.com/sirupsen/logrus and
-// e.g. https://github.com/sirupsen/logrus/pull/653#issuecomment-339763585, we might use our
-// own log package in the future.
-var log *logrus.Entry
-func init() {
-	commit := os.Getenv("COMMIT")
-	if commit == "" {
-		logrus.Warn("Environment variable 'commit' not set, unable to record hash in every log")
-		log = logrus.NewEntry(logrus.New())
-		return
-	}
-
-	log = logrus.WithFields(logrus.Fields{"commit":commit})
-}
-
 func main() {
-	initializeLogging()
 	serve()
 }
 
@@ -80,22 +66,3 @@ func Message() string {
 	return "OK"
 }
 
-func initializeLogging() {
-	// On local environment ignore all file logging.
-	env := os.Getenv("ENVIRONMENT")
-	if env == "local" {
-		log.Info("Local environment, using solely console output")
-		return
-	}
-
-	// Set to JSON.
-	formatter := &logrus.JSONFormatter{
-	  	FieldMap: logrus.FieldMap{
-			 logrus.FieldKeyTime:  "@timestamp",
-			 logrus.FieldKeyLevel: "level",
-			 logrus.FieldKeyMsg:   "message",
-	   },
-	}
-	logrus.SetOutput(os.Stdout)
-	logrus.SetFormatter(formatter)
-}
