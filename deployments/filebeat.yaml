@@ -166,6 +166,8 @@ data:
           fields:
             - from: host
               to: host_object
+            - from: kubernetes.container.name
+              to: service
     setup.template:
       enabled: false
       overwrite: false
