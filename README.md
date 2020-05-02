@@ -42,7 +42,6 @@ online I leave it here for now.
 
 # Next steps
 
-- [ ] JWT middleware in echo?
 - [ ] Think about keycloak integration?
 - [ ] Add integration tests
 
