@@ -59,6 +59,10 @@ func addVersionEndpoint(e *echo.Echo) {
 
 func addAPIEndpoint(e *echo.Echo) {
 	e.POST("/api", func(c echo.Context) error {
+		token := c.Get("user").(*jwt.Token)
+		claims := token.Claims.(jwt.MapClaims)
+		log = log.WithField("user", claims["user"])
+
 		var json request
 		err := c.Bind(&json)
 		if err != nil {
