@@ -26,7 +26,11 @@ func main() {
 	e.HidePort = true
 
 	// Middlewares.
-	e.Use(middleware.JWT([]byte("secret")))
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		panic("NO JWT_SECRET set. Aborting.")
+	}
+	e.Use(middleware.JWT([]byte(secret)))
 
 	// Endpoints.
 	addVersionEndpoint(e)
