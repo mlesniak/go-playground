@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.com/mlesniak/go-playground.svg?branch=master)](https://travis-ci.com/mlesniak/go-playground)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mlesniak_go-playground&metric=alert_status)](https://sonarcloud.io/dashboard?id=mlesniak_go-playground)
+[![Go Report Card](https://goreportcard.com/badge/github.com/mlesniak/go-playground)](https://goreportcard.com/report/github.com/mlesniak/go-playground)
 [![Code of Conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-orange.svg?style=flat)](CODE_OF_CONDUCT.md)
 
 # Overview
