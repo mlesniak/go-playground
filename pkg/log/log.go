@@ -17,16 +17,15 @@ func init() {
 
 	// Set to JSON.
 	formatter := &logrus.JSONFormatter{
-	  	FieldMap: logrus.FieldMap{
-			 logrus.FieldKeyTime:  "@timestamp",
-			 logrus.FieldKeyLevel: "level",
-			 logrus.FieldKeyMsg:   "message",
-	   },
+		FieldMap: logrus.FieldMap{
+			logrus.FieldKeyTime:  "@timestamp",
+			logrus.FieldKeyLevel: "level",
+			logrus.FieldKeyMsg:   "message",
+		},
 	}
 	logrus.SetOutput(os.Stdout)
 	logrus.SetFormatter(formatter)
 }
-
 
 // New returns a usable log entry with a set of default fields.
 func New() *logrus.Entry {
