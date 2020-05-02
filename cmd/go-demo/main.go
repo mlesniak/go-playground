@@ -30,7 +30,23 @@ func main() {
 	if secret == "" {
 		panic("NO JWT_SECRET set. Aborting.")
 	}
-	e.Use(middleware.JWT([]byte(secret)))
+	e.Use(middleware.JWTWithConfig(middleware.JWTConfig{
+		SigningKey: []byte(secret),
+		Skipper: func(c echo.Context) bool {
+			// List of urls to ignore for authentication.
+			ignoredURL := []string{
+				"/api/version",
+			}
+
+			path := c.Request().URL.Path
+			for _, v := range ignoredURL {
+				if v == path {
+					return true
+				}
+			}
+			return false
+		},
+	}))
 
 	// Endpoints.
 	addVersionEndpoint(e)
@@ -42,9 +58,12 @@ func main() {
 
 func addVersionEndpoint(e *echo.Echo) {
 	e.GET("/api/version", func(c echo.Context) error {
-		token := c.Get("user").(*jwt.Token)
-		claims := token.Claims.(jwt.MapClaims)
-		log = log.WithField("user", claims["user"])
+		u := c.Get("user")
+		if u != nil {
+			token := u.(*jwt.Token)
+			claims := token.Claims.(jwt.MapClaims)
+			log = log.WithField("user", claims["user"])
+		}
 
 		log.Info("Version info requested")
 		commit := os.Getenv("COMMIT")
