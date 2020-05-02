@@ -16,7 +16,6 @@ spec:
           image: docker.elastic.co/beats/filebeat-oss:7.6.2
           securityContext:
             runAsUser: 0
-
           env:
             - name: SEMATEXT_TOKEN
               valueFrom:

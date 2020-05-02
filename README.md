@@ -33,6 +33,9 @@ online I leave it here for now.
 
 ## Example authentication with jwt
 
+    # Beforehand, create K8 secret
+    echo -n "..."|kubectl create secret generic jwt-token --from-file=token=/dev/stdin
+
     export T=$(jwt encode --secret beihaeliech1thooya5Peecu1mi3SheithooFee5cheesheeG1eeGh3Duu9yeiph -P user=1234)
     http :8080/api/version Authorization:"Bearer $T"
 

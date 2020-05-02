@@ -20,6 +20,12 @@ spec:
           image: docker.io/mlesniak/go-demo
           ports:
             - containerPort: 8080
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-token
+                  key: token
           resources:
             requests:
               cpu: "100m"
