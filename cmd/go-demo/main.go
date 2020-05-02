@@ -4,7 +4,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	logger "github.com/mlesniak/go-demo/pkg/log"
 )
 
@@ -23,6 +25,10 @@ func main() {
 	e.HideBanner = true
 	e.HidePort = true
 
+	// Middlewares.
+	e.Use(middleware.JWT([]byte("secret")))
+
+	// Endpoints.
 	addVersionEndpoint(e)
 	addAPIEndpoint(e)
 
@@ -32,6 +38,10 @@ func main() {
 
 func addVersionEndpoint(e *echo.Echo) {
 	e.GET("/api/version", func(c echo.Context) error {
+		token := c.Get("user").(*jwt.Token)
+		claims := token.Claims.(jwt.MapClaims)
+		log = log.WithField("user", claims["user"])
+
 		log.Info("Version info requested")
 		commit := os.Getenv("COMMIT")
 		if commit == "" {
