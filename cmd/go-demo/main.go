@@ -26,27 +26,7 @@ func main() {
 	e.HidePort = true
 
 	// Middlewares.
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		panic("NO JWT_SECRET set. Aborting.")
-	}
-	e.Use(middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey: []byte(secret),
-		Skipper: func(c echo.Context) bool {
-			// List of urls to ignore for authentication.
-			ignoredURL := []string{
-				"/api/version",
-			}
-
-			path := c.Request().URL.Path
-			for _, v := range ignoredURL {
-				if v == path {
-					return true
-				}
-			}
-			return false
-		},
-	}))
+	addJWTMiddleware(e)
 
 	// Endpoints.
 	addVersionEndpoint(e)
@@ -92,4 +72,28 @@ func addAPIEndpoint(e *echo.Echo) {
 		resp := response{json.Number + 1}
 		return c.JSON(http.StatusOK, resp)
 	})
+}
+
+func addJWTMiddleware(e *echo.Echo) {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		panic("NO JWT_SECRET set. Aborting.")
+	}
+	e.Use(middleware.JWTWithConfig(middleware.JWTConfig{
+		SigningKey: []byte(secret),
+		Skipper: func(c echo.Context) bool {
+			// List of urls to ignore for authentication.
+			ignoredURL := []string{
+				"/api/version",
+			}
+
+			path := c.Request().URL.Path
+			for _, v := range ignoredURL {
+				if v == path {
+					return true
+				}
+			}
+			return false
+		},
+	}))
 }
