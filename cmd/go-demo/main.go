@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	logger "github.com/mlesniak/go-demo/pkg/log"
@@ -38,12 +37,7 @@ func main() {
 
 func addVersionEndpoint(e *echo.Echo) {
 	e.GET("/api/version", func(c echo.Context) error {
-		u := c.Get("user")
-		if u != nil {
-			token := u.(*jwt.Token)
-			claims := token.Claims.(jwt.MapClaims)
-			log = log.WithField("user", claims["user"])
-		}
+		log := logger.AddUser(log, c)
 
 		log.Info("Version info requested")
 		commit := os.Getenv("COMMIT")
@@ -58,9 +52,7 @@ func addVersionEndpoint(e *echo.Echo) {
 
 func addAPIEndpoint(e *echo.Echo) {
 	e.POST("/api", func(c echo.Context) error {
-		token := c.Get("user").(*jwt.Token)
-		claims := token.Claims.(jwt.MapClaims)
-		log = log.WithField("user", claims["user"])
+		log := logger.AddUser(log, c)
 
 		var json request
 		err := c.Bind(&json)
