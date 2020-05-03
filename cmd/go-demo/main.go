@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	logger "github.com/mlesniak/go-demo/pkg/log"
+	"github.com/mlesniak/go-demo/pkg/version"
 )
 
 var log = logger.New()
@@ -26,7 +27,7 @@ func main() {
 	// addJWTMiddleware(e)
 
 	// Endpoints.
-	addVersionEndpoint(e)
+	version.AddVersionEndpoint(e)
 	addAPIEndpoint(e)
 	addAuthenticationEndpoints(e)
 
@@ -36,21 +37,6 @@ func main() {
 		port = "8080"
 	}
 	log.Info(e.Start(":" + port))
-}
-
-func addVersionEndpoint(e *echo.Echo) {
-	e.GET("/api/version", func(c echo.Context) error {
-		log := logger.AddUser(log, c)
-
-		log.Info("Version info requested")
-		commit := os.Getenv("COMMIT")
-		if commit == "" {
-			commit = "<No COMMIT environment variable set>"
-		}
-		return c.JSON(http.StatusOK, struct {
-			Version string `json:"version"`
-		}{commit})
-	})
 }
 
 func addAPIEndpoint(e *echo.Echo) {
@@ -63,7 +49,9 @@ func addAPIEndpoint(e *echo.Echo) {
 	}
 
 	e.POST("/api", func(c echo.Context) error {
-		log := logger.AddUser(log, c)
+		// log := logger.AddUser(log, c)
+		// This will be done as a middleware, later on.
+		checkUser(c)
 
 		var json request
 		err := c.Bind(&json)
@@ -150,6 +138,11 @@ func addAuthenticationEndpoints(e *echo.Echo) {
 
 		return c.String(http.StatusOK, "/api/login case not implemented")
 	})
+}
+
+// Returns false if unauthorized.
+func checkUser(c echo.Context) bool {
+	return true
 }
 
 // else if r.RefreshToken != "" {
