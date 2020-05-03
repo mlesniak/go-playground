@@ -101,15 +101,21 @@ func addJWTMiddleware(e *echo.Echo) {
 	}))
 }
 
-// Will be refactored into its own package...
+// WILL BE HEAVILY REFACTORED INTO ITS OWN PACKAGE...
 func addAuthenticationEndpoints(e *echo.Echo) {
 	// This endpoint can be used for both first and later authentication with refresh tokens.
 	e.POST("/api/login", func(c echo.Context) error {
+		type response struct {
+			AccessToken     string `json:"accessToken"`
+			RefreshToken     string `json:"refreshToken"`
+		}
+
 		type request struct {
 			Username     string `json:"username"`
 			Password     string `json:"password"`
 			RefreshToken string `json:"refreshToken"`
 		}
+
 		var r request
 		c.Bind(&r)
 		log.Info("Body:", r)
@@ -134,9 +140,15 @@ func addAuthenticationEndpoints(e *echo.Echo) {
 			var v map[string]string
 			dec.Decode(&v)
 			log.Info("Response {}", v)
+
+			token := response{
+				AccessToken: v["access_token"],
+				RefreshToken: v["refresh_token"],
+			}
+			return c.JSON(http.StatusOK, token)
 		}
 
-		return c.String(http.StatusOK, "/api/login working")
+		return c.String(http.StatusOK, "/api/login case not implemented")
 	})
 }
 
