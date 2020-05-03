@@ -97,8 +97,8 @@ func addAuthenticationEndpoints(e *echo.Echo) {
 	// This endpoint can be used for both first and later authentication with refresh tokens.
 	e.POST("/api/login", func(c echo.Context) error {
 		type response struct {
-			AccessToken     string `json:"accessToken"`
-			RefreshToken     string `json:"refreshToken"`
+			AccessToken  string `json:"accessToken"`
+			RefreshToken string `json:"refreshToken"`
 		}
 
 		type request struct {
@@ -133,7 +133,7 @@ func addAuthenticationEndpoints(e *echo.Echo) {
 			log.Info("Response {}", v)
 
 			token := response{
-				AccessToken: v["access_token"],
+				AccessToken:  v["access_token"],
 				RefreshToken: v["refresh_token"],
 			}
 			return c.JSON(http.StatusOK, token)
@@ -145,12 +145,30 @@ func addAuthenticationEndpoints(e *echo.Echo) {
 
 // Returns false if unauthorized.
 func isAuthenticated(c echo.Context) bool {
-	bearer := c.Request().Header.Get("Authorization")
-	if bearer == "" {
+	token := c.Request().Header.Get("Authorization")
+	if token  == "" {
 		return false
 	}
+	log.Info("token:", token)
 
-	return true
+	// Access keycloak until we use caching.
+	// m := make(map[string][]string)
+	// m["refresh_token"] = ...
+	// m["grant_type"] = []string{"password"}
+	// m["client_id"] = []string{"api"}
+
+	req, err := http.NewRequest("GET", "http://localhost:8081/auth/realms/mlesniak/protocol/openid-connect/userinfo", nil)
+	req.Header.Add("Authorization", token)
+	cl := &http.Client{}
+	resp, err := cl.Do(req)
+	if err != nil {
+		return false
+	}
+	if resp.StatusCode == 200 {
+		return true
+	}
+
+	return false
 }
 
 // else if r.RefreshToken != "" {
