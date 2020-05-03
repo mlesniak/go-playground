@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -11,12 +12,8 @@ import (
 
 var log = logger.New()
 
-type request struct {
-	Number int `json:"number"`
-}
-
-type response struct {
-	Number int `json:"number"`
+type ErrorResponse struct {
+	Error string `json:"error"`
 }
 
 func main() {
@@ -25,11 +22,13 @@ func main() {
 	e.HidePort = true
 
 	// Middlewares.
-	addJWTMiddleware(e)
+	// Disabled until we add keycloak handling.
+	// addJWTMiddleware(e)
 
 	// Endpoints.
 	addVersionEndpoint(e)
 	addAPIEndpoint(e)
+	addAuthenticationEndpoints(e)
 
 	log.Info("Application started")
 	port := os.Getenv("PORT")
@@ -55,6 +54,14 @@ func addVersionEndpoint(e *echo.Echo) {
 }
 
 func addAPIEndpoint(e *echo.Echo) {
+	type request struct {
+		Number int `json:"number"`
+	}
+
+	type response struct {
+		Number int `json:"number"`
+	}
+
 	e.POST("/api", func(c echo.Context) error {
 		log := logger.AddUser(log, c)
 
@@ -93,3 +100,49 @@ func addJWTMiddleware(e *echo.Echo) {
 		},
 	}))
 }
+
+// Will be refactored into its own package...
+func addAuthenticationEndpoints(e *echo.Echo) {
+	// This endpoint can be used for both first and later authentication with refresh tokens.
+	e.POST("/api/login", func(c echo.Context) error {
+		type request struct {
+			Username     string `json:"username"`
+			Password     string `json:"password"`
+			RefreshToken string `json:"refreshToken"`
+		}
+		var r request
+		c.Bind(&r)
+		log.Info("Body:", r)
+
+		if r.Username != "" && r.Password != "" {
+			log.WithField("username", r.Username).Info("Login")
+			// Send request to keycloak
+			m := make(map[string][]string)
+			m["username"] = []string{r.Username}
+			m["password"] = []string{r.Password}
+			m["grant_type"] = []string{"password"}
+			m["client_id"] = []string{"api"}
+			resp, err := http.PostForm("http://localhost:8081/auth/realms/mlesniak/protocol/openid-connect/token", m)
+			if err != nil {
+				panic(err)
+			}
+			if resp.StatusCode != 200 {
+				panic("Not working:" + string(resp.StatusCode))
+			}
+			log.WithField("code", resp.StatusCode).Info("Successful login")
+			bs, _ := ioutil.ReadAll(resp.Body)
+			log.Info("Response ", string(bs))
+			// dec := json.NewDecoder(resp.Body)
+			// var v interface{}
+			// dec.Decode(&v)
+			// log.Info("Response {}", v)
+		}
+
+		return c.String(http.StatusOK, "/api/login working")
+	})
+}
+
+// else if r.RefreshToken != "" {
+// } else {
+// 	return c.JSON(http.StatusBadRequest, ErrorResponse{"Missing parameters"})
+// }
