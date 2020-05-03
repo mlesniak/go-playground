@@ -1,7 +1,7 @@
 package main
 
 import (
-	"io/ioutil"
+	"encoding/json"
 	"net/http"
 	"os"
 
@@ -130,12 +130,10 @@ func addAuthenticationEndpoints(e *echo.Echo) {
 				panic("Not working:" + string(resp.StatusCode))
 			}
 			log.WithField("code", resp.StatusCode).Info("Successful login")
-			bs, _ := ioutil.ReadAll(resp.Body)
-			log.Info("Response ", string(bs))
-			// dec := json.NewDecoder(resp.Body)
-			// var v interface{}
-			// dec.Decode(&v)
-			// log.Info("Response {}", v)
+			dec := json.NewDecoder(resp.Body)
+			var v map[string]string
+			dec.Decode(&v)
+			log.Info("Response {}", v)
 		}
 
 		return c.String(http.StatusOK, "/api/login working")
