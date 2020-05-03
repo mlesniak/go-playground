@@ -32,7 +32,11 @@ func main() {
 	addAPIEndpoint(e)
 
 	log.Info("Application started")
-	log.Info(e.Start(":8080"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Info(e.Start(":" + port))
 }
 
 func addVersionEndpoint(e *echo.Echo) {
