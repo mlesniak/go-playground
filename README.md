@@ -44,4 +44,5 @@ online I leave it here for now.
 
 - [ ] Think about keycloak integration?
 - [ ] Add integration tests
+- [ ] Add swagger
 
