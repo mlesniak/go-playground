@@ -32,17 +32,20 @@ execute
 Note: the creation of the role is now executed in the `yaml` file, but since it was quite difficult to find information about this problem
 online I leave it here for now.
 
-## Example authentication with jwt
+## Example authentication with keycloak
 
-    # Beforehand, create K8 secret
-    echo -n "..."|kubectl create secret generic jwt-token --from-file=token=/dev/stdin
+We use our app as a proxy
 
-    export T=$(jwt encode --secret beihaeliech1thooya5Peecu1mi3SheithooFee5cheesheeG1eeGh3Duu9yeiph -P user=1234)
-    http :8080/api/version Authorization:"Bearer $T"
+    export T=$(http POST :8080/api/login username=demo password=demo|jq -r .accessToken)
+    http POST :8080/api number:=10 Authorization:"Bearer $T"
+
 
 # Next steps
 
-- [ ] Think about keycloak integration?
+- [ ] Refactor authentication into own package
+- [ ] Add authentication check as middleware
+- [ ] Deploy keycloak to K8s cluster
+- [ ] Cache token to prevent accessing keycloak on each request
 - [ ] Add integration tests
 - [ ] Add swagger
 
