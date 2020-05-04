@@ -22,7 +22,12 @@ func main() {
 	e.HidePort = true
 
 	// Middlewares.
-	e.Use(authentication.KeycloakMiddleware)
+	e.Use(authentication.KeycloakWithConfig(authentication.KeycloakConfig{
+		IgnoredURL: []string{
+			"/api/login",
+			"/api/version",
+		},
+	}))
 
 	// Endpoints.
 	version.AddVersionEndpoint(e)

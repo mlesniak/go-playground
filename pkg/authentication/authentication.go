@@ -10,34 +10,36 @@ import (
 
 var log = logger.New()
 
-// KeycloakMiddleware defines a middleware to check authentication.
-func KeycloakMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		check := true
-		ignoreURL := []string{
-			"/api/login",
-		}
-		log.Info("Request from ", c.Request().RequestURI)
-		for _, i := range ignoreURL {
-			if i == c.Request().URL.RequestURI() {
-				check = false
-				break
-			}
-		}
-
-		if check && !IsAuthenticated(c) {
-			return c.NoContent(http.StatusUnauthorized)
-		}
-
-		// TODO If authenticated, add user and roles to request context.
-
-		if err := next(c); err != nil {
-			c.Error(err)
-		}
-		return nil
-	}
+type KeycloakConfig struct {
+	IgnoredURL []string
 }
 
+// KeycloakWithConfig ... with config
+func KeycloakWithConfig(config KeycloakConfig) func(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			check := true
+			log.Info("Request from ", c.Request().RequestURI)
+			for _, i := range config.IgnoredURL {
+				if i == c.Request().URL.RequestURI() {
+					check = false
+					break
+				}
+			}
+
+			if check && !IsAuthenticated(c) {
+				return c.NoContent(http.StatusUnauthorized)
+			}
+
+			// TODO If authenticated, add user and roles to request context.
+
+			if err := next(c); err != nil {
+				c.Error(err)
+			}
+			return nil
+		}
+	}
+}
 
 // IsAuthenticated returns true if the user submits a valid JWT token.
 func IsAuthenticated(c echo.Context) bool {
