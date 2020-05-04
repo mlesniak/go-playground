@@ -36,13 +36,17 @@ online I leave it here for now.
 
 We use our app as a proxy
 
-    export T=$(http POST :8080/api/login username=demo password=demo|jq -r .accessToken)
+    export A=$(http POST :8080/api/login username=demo password=demo)
+    export T=$(echo $A|jq -r .accessToken)
+    export R=$(echo $A|jq -r .refreshToken)
     http POST :8080/api number:=10 Authorization:"Bearer $T"
+    http -v POST :8080/api/logout Authorization:"Bearer $T" refreshToken=$R username=demo password=demo
 
 
 # Next steps
 
 - [ ] Add authentication check as middleware
+- [ ] Add logging to authentication
 - [ ] Deploy keycloak to K8s cluster
 - [ ] Cache token to prevent accessing keycloak on each request
 - [ ] Add integration tests

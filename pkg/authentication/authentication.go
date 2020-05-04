@@ -16,13 +16,6 @@ func IsAuthenticated(c echo.Context) bool {
 	if token == "" {
 		return false
 	}
-	log.Info("token:", token)
-
-	// Access keycloak until we use caching.
-	// m := make(map[string][]string)
-	// m["refresh_token"] = ...
-	// m["grant_type"] = []string{"password"}
-	// m["client_id"] = []string{"api"}
 
 	req, err := http.NewRequest("GET", "http://localhost:8081/auth/realms/mlesniak/protocol/openid-connect/userinfo", nil)
 	req.Header.Add("Authorization", token)
@@ -38,24 +31,50 @@ func IsAuthenticated(c echo.Context) bool {
 	return false
 }
 
-// else if r.RefreshToken != "" {
-// } else {
-// 	return c.JSON(http.StatusBadRequest, ErrorResponse{"Missing parameters"})
-// }
-
 // AddAuthenticationEndpoints adds the login endpoint for authentication.
 // WILL BE HEAVILY REFACTORED INTO ITS OWN PACKAGE...
 func AddAuthenticationEndpoints(e *echo.Echo) {
+	type request struct {
+		Username     string `json:"username"`
+		Password     string `json:"password"`
+		RefreshToken string `json:"refreshToken"`
+	}
+
+	e.POST("/api/logout", func(c echo.Context) error {
+		log.Info("/api/logout called")
+		token := c.Request().Header.Get("Authorization")
+		if token == "" {
+			log.Info("/logout called for non-authorized user")
+			return c.NoContent(http.StatusOK)
+		}
+
+		// c.Request().ParseForm()
+		// r := c.Request().Form.Get("request_token")
+		var r request
+		c.Bind(&r)
+		m := make(map[string][]string)
+		m["client_id"] = []string{"api"}
+		m["refresh_token"] = []string{r.RefreshToken}
+		m["username"] = []string{r.Username}
+		m["password"] = []string{r.Password}
+		resp, err := http.PostForm("http://localhost:8081/auth/realms/mlesniak/protocol/openid-connect/logout", m)
+		if err != nil {
+			log.Warn(err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+		if resp.StatusCode == 204 {
+			log.Info("Logout successful")
+			return c.NoContent(http.StatusOK)
+		}
+
+		log.Info("Oops: ", resp.StatusCode)
+		return c.NoContent(http.StatusInternalServerError)
+	})
+
 	// This endpoint can be used for both first and later authentication with refresh tokens.
 	e.POST("/api/login", func(c echo.Context) error {
 		type response struct {
 			AccessToken  string `json:"accessToken"`
-			RefreshToken string `json:"refreshToken"`
-		}
-
-		type request struct {
-			Username     string `json:"username"`
-			Password     string `json:"password"`
 			RefreshToken string `json:"refreshToken"`
 		}
 
@@ -82,7 +101,6 @@ func AddAuthenticationEndpoints(e *echo.Echo) {
 			dec := json.NewDecoder(resp.Body)
 			var v map[string]string
 			dec.Decode(&v)
-			log.Info("Response {}", v)
 
 			token := response{
 				AccessToken:  v["access_token"],
