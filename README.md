@@ -36,6 +36,8 @@ online I leave it here for now.
 
 We use our app as a proxy
 
+    docker run --name keycloak -p 8081:8080 -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin quay.io/keycloak/keycloak:9.0.3
+
     export A=$(http POST :8080/api/login username=demo password=demo)
     export T=$(echo $A|jq -r .accessToken)
     export R=$(echo $A|jq -r .refreshToken)
@@ -46,6 +48,7 @@ We use our app as a proxy
 # Next steps
 
 - [ ] Refactor authentication package
+- [ ] Add support for refreshToken
 - [ ] Add logging to authentication
 - [ ] Deploy keycloak to K8s cluster
 - [ ] Cache token to prevent accessing keycloak on each request
