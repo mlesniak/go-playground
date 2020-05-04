@@ -10,13 +10,44 @@ import (
 
 var log = logger.New()
 
+// KeycloakMiddleware defines a middleware to check authentication.
+func KeycloakMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		check := true
+		ignoreURL := []string{
+			"/api/login",
+		}
+		log.Info("Request from ", c.Request().RequestURI)
+		for _, i := range ignoreURL {
+			if i == c.Request().URL.RequestURI() {
+				check = false
+				break
+			}
+		}
+
+		if check && !IsAuthenticated(c) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
+		// TODO If authenticated, add user and roles to request context.
+
+		if err := next(c); err != nil {
+			c.Error(err)
+		}
+		return nil
+	}
+}
+
+
 // IsAuthenticated returns true if the user submits a valid JWT token.
 func IsAuthenticated(c echo.Context) bool {
 	token := c.Request().Header.Get("Authorization")
 	if token == "" {
+		log.Info("No token")
 		return false
 	}
 
+	log.Info("Check token", token)
 	req, err := http.NewRequest("GET", "http://localhost:8081/auth/realms/mlesniak/protocol/openid-connect/userinfo", nil)
 	req.Header.Add("Authorization", token)
 	cl := &http.Client{}

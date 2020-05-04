@@ -21,6 +21,9 @@ func main() {
 	e.HideBanner = true
 	e.HidePort = true
 
+	// Middlewares.
+	e.Use(authentication.KeycloakMiddleware)
+
 	// Endpoints.
 	version.AddVersionEndpoint(e)
 	authentication.AddAuthenticationEndpoints(e)
@@ -46,10 +49,10 @@ func addAPIEndpoint(e *echo.Echo) {
 	e.POST("/api", func(c echo.Context) error {
 		// log := logger.AddUser(log, c)
 		// This will be done as a middleware, later on.
-		authenticated := authentication.IsAuthenticated(c)
-		if !authenticated {
-			return c.NoContent(http.StatusUnauthorized)
-		}
+		// authenticated := authentication.IsAuthenticated(c)
+		// if !authenticated {
+		// 	return c.NoContent(http.StatusUnauthorized)
+		// }
 
 		var json request
 		err := c.Bind(&json)

@@ -45,7 +45,7 @@ We use our app as a proxy
 
 # Next steps
 
-- [ ] Add authentication check as middleware
+- [ ] Refactor authentication package
 - [ ] Add logging to authentication
 - [ ] Deploy keycloak to K8s cluster
 - [ ] Cache token to prevent accessing keycloak on each request
