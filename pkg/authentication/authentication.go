@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	logger "github.com/mlesniak/go-demo/pkg/log"
 )
@@ -12,6 +13,14 @@ var log = logger.New()
 
 type KeycloakConfig struct {
 	IgnoredURL []string
+	// Add configuration for Keycloak here...
+}
+
+const AuthenticationContext = "Authentication"
+
+type Authentication struct {
+	Username string
+	roles    []string
 }
 
 // KeycloakWithConfig ... with config
@@ -27,11 +36,27 @@ func KeycloakWithConfig(config KeycloakConfig) func(next echo.HandlerFunc) echo.
 				}
 			}
 
-			if check && !IsAuthenticated(c) {
-				return c.NoContent(http.StatusUnauthorized)
+			if check {
+				if !IsAuthenticated(c) {
+					return c.NoContent(http.StatusUnauthorized)
+				} else {
+					// If authenticated, add user and roles to request context for later processing.
+					tokenString := c.Request().Header.Get("Authorization")[7:]
+					// See https://github.com/dgrijalva/jwt-go/issues/37
+					token, _ := jwt.Parse(tokenString, nil)
+					if token == nil {
+						panic("Token was not parsable. This should not happen, since we submitted the token to keycloak beforehand.")
+					}
+					log.Info("Token: ", token)
+					claims := token.Claims.(jwt.MapClaims)
+					log.Info("Claims: ", claims)
+					auth := Authentication{
+						Username: claims["preferred_username"].(string),
+						// Roles: claims["realm_access"]
+					}
+					c.Set(AuthenticationContext, auth)
+				}
 			}
-
-			// TODO If authenticated, add user and roles to request context.
 
 			if err := next(c); err != nil {
 				c.Error(err)
@@ -49,7 +74,7 @@ func IsAuthenticated(c echo.Context) bool {
 		return false
 	}
 
-	log.Info("Check token", token)
+	// log.Info("Check token", token)
 	req, err := http.NewRequest("GET", "http://localhost:8081/auth/realms/mlesniak/protocol/openid-connect/userinfo", nil)
 	req.Header.Add("Authorization", token)
 	cl := &http.Client{}

@@ -52,12 +52,7 @@ func addAPIEndpoint(e *echo.Echo) {
 	}
 
 	e.POST("/api", func(c echo.Context) error {
-		// log := logger.AddUser(log, c)
-		// This will be done as a middleware, later on.
-		// authenticated := authentication.IsAuthenticated(c)
-		// if !authenticated {
-		// 	return c.NoContent(http.StatusUnauthorized)
-		// }
+		log := authentication.AddUser(log, c)
 
 		var json request
 		err := c.Bind(&json)
