@@ -2,7 +2,6 @@ package authentication
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
