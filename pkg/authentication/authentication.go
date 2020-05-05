@@ -2,6 +2,7 @@ package authentication
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
@@ -47,9 +48,13 @@ func KeycloakWithConfig(config KeycloakConfig) func(next echo.HandlerFunc) echo.
 					if token == nil {
 						panic("Token was not parsable. This should not happen, since we submitted the token to keycloak beforehand.")
 					}
-					log.Info("Token: ", token)
 					claims := token.Claims.(jwt.MapClaims)
 					log.Info("Claims: ", claims)
+
+					// TODO Parse roles
+					// fmt.Printf("TYPE %v\n", map[string]interface{}(claims["realm_access"].(map[string]interface{}))["roles"] )
+					// TODO Parse attribures
+					// TODO Nice interface in AuthenticationContext
 					auth := Authentication{
 						Username: claims["preferred_username"].(string),
 						// Roles: claims["realm_access"]
