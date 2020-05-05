@@ -54,11 +54,17 @@ func KeycloakWithConfig(config KeycloakConfig) func(next echo.HandlerFunc) echo.
 					// Parse roles
 					// fmt.Printf("TYPE %v\n", map[string]interface{}()["roles"] )
 					m1 := claims["realm_access"].(map[string]interface{})
-					roles := m1["roles"].([]string)
-					// TODO Parse attributes
+					roles_ := m1["roles"].([]interface{})
+
+					var roles []string
+					for _ ,v := range roles_ {
+						roles = append(roles, v.(string))
+					}
+					log.Info("Roles ", roles)
+
 					auth := Authentication{
 						Username: claims["preferred_username"].(string),
-						Roles: roles,
+						Roles:    roles,
 					}
 					c.Set(Context, auth)
 				}
@@ -85,6 +91,10 @@ func IsAuthenticated(c echo.Context) bool {
 	req.Header.Add("Authorization", token)
 	cl := &http.Client{}
 	resp, err := cl.Do(req)
+
+	// rs, _ := ioutil.ReadAll(resp.Body)
+	// log.Info("rs ", string(rs))
+
 	if err != nil {
 		return false
 	}
