@@ -16,11 +16,12 @@ type KeycloakConfig struct {
 	// Add configuration for Keycloak here...
 }
 
-const AuthenticationContext = "Authentication"
+const Context = "Authentication"
 
 type Authentication struct {
 	Username string
-	roles    []string
+	Roles    []string
+	// TODO Add methods to authentication
 }
 
 // KeycloakWithConfig ... with config
@@ -50,15 +51,16 @@ func KeycloakWithConfig(config KeycloakConfig) func(next echo.HandlerFunc) echo.
 					claims := token.Claims.(jwt.MapClaims)
 					log.Info("Claims: ", claims)
 
-					// TODO Parse roles
-					// fmt.Printf("TYPE %v\n", map[string]interface{}(claims["realm_access"].(map[string]interface{}))["roles"] )
-					// TODO Parse attribures
-					// TODO Nice interface in AuthenticationContext
+					// Parse roles
+					// fmt.Printf("TYPE %v\n", map[string]interface{}()["roles"] )
+					m1 := claims["realm_access"].(map[string]interface{})
+					roles := m1["roles"].([]string)
+					// TODO Parse attributes
 					auth := Authentication{
 						Username: claims["preferred_username"].(string),
-						// Roles: claims["realm_access"]
+						Roles: roles,
 					}
-					c.Set(AuthenticationContext, auth)
+					c.Set(Context, auth)
 				}
 			}
 
