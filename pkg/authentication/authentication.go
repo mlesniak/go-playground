@@ -24,11 +24,6 @@ type KeycloakConfig struct {
 // TODO Add methods to authentication such as hasRole(string) bool
 const ContextName = "Authentication"
 
-// Authentication contains all user information of an authenticated user.
-type Authentication struct {
-	Username string
-	Roles    []string
-}
 
 // KeycloakWithConfig ... with config
 func KeycloakWithConfig(config KeycloakConfig) func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -103,7 +98,7 @@ func addUserInfoToContext(c echo.Context) {
 	}
 
 	// Inject object into context
-	auth := Authentication{
+	auth := context.Authentication{
 		Username: claims["preferred_username"].(string),
 		Roles:    roles,
 	}
@@ -153,7 +148,7 @@ func AddAuthenticationEndpoints(e *echo.Echo) {
 	// This endpoint can be used for both first and later authentication with refresh tokens.
 	e.POST("/api/login", func(cc echo.Context) error {
 		c := cc.(*context.CustomContext)
-		c.Foo()
+		c.Username()
 
 		type response struct {
 			AccessToken  string `json:"accessToken"`
