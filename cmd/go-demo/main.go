@@ -24,6 +24,10 @@ func main() {
 			"/api/login",
 			"/api/version",
 		},
+		Protocol: "http",
+		Hostname: "localhost",
+		Port: "8081",
+		Realm: "mlesniak",
 	}))
 
 	// Endpoints.

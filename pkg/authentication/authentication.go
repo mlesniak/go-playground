@@ -2,6 +2,7 @@ package authentication
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
@@ -16,6 +17,11 @@ var log = logger.New()
 // KeycloakConfig defines configuration options for the middleware.
 type KeycloakConfig struct {
 	IgnoredURL []string
+	Protocol   string
+	Hostname   string
+	Port       string
+	Realm      string
+
 	// Add configuration for Keycloak here...
 }
 
@@ -24,9 +30,12 @@ type KeycloakConfig struct {
 // TODO Add methods to authentication such as hasRole(string) bool
 const ContextName = "Authentication"
 
-
 // KeycloakWithConfig ... with config
 func KeycloakWithConfig(config KeycloakConfig) func(next echo.HandlerFunc) echo.HandlerFunc {
+	if config.Protocol == "" || config.Hostname == "" || config.Port == "" || config.Realm == "" {
+		panic("The keycloak configuration is invalid, at least one property is empty.")
+	}
+
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			// Check for ignored URLS such as login routes.
@@ -39,7 +48,7 @@ func KeycloakWithConfig(config KeycloakConfig) func(next echo.HandlerFunc) echo.
 			}
 
 			if shouldURLbeChecked {
-				if !IsAuthenticated(c) {
+				if !config.isAuthenticated(c) {
 					return c.JSON(http.StatusUnauthorized, errors.Response{"Token is invalid"})
 				}
 				addUserInfoToContext(c)
@@ -54,15 +63,21 @@ func KeycloakWithConfig(config KeycloakConfig) func(next echo.HandlerFunc) echo.
 	}
 }
 
+func (config *KeycloakConfig) getKeycloakURLFor(operation string) string {
+	return fmt.Sprintf(
+		"%s://%s:%s/auth/realms/%s/protocol/openid-connect/%s",
+		config.Protocol, config.Hostname, config.Port, config.Realm, operation)
+}
+
 // IsAuthenticated returns true if the user submits a valid JWT token.
-func IsAuthenticated(c echo.Context) bool {
+func (config *KeycloakConfig) isAuthenticated(c echo.Context) bool {
 	token := c.Request().Header.Get("Authorization")
 	if token == "" {
 		log.Info("No token provided in Authorization header")
 		return false
 	}
 
-	req, err := http.NewRequest("GET", "http://localhost:8081/auth/realms/mlesniak/protocol/openid-connect/userinfo", nil)
+	req, err := http.NewRequest("GET", config.getKeycloakURLFor("userinfo"), nil)
 	req.Header.Add("Authorization", token)
 	cl := &http.Client{}
 	resp, err := cl.Do(req)
