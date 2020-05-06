@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo"
 	"github.com/mlesniak/go-demo/pkg/authentication"
 	"github.com/mlesniak/go-demo/pkg/demo"
 	logger "github.com/mlesniak/go-demo/pkg/log"

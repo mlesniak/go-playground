@@ -3,7 +3,7 @@ package demo
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo"
 	"github.com/mlesniak/go-demo/pkg/authentication"
 	logger "github.com/mlesniak/go-demo/pkg/log"
 )

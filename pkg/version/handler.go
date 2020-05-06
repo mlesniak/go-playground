@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo"
 	logger "github.com/mlesniak/go-demo/pkg/log"
 )
 
