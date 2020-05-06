@@ -21,14 +21,7 @@ type KeycloakConfig struct {
 	Hostname   string
 	Port       string
 	Realm      string
-
-	// Add configuration for Keycloak here...
 }
-
-// ContextName is the name of the stored authentication object in the context object.
-// TODO Use custom context here.
-// TODO Add methods to authentication such as hasRole(string) bool
-const ContextName = "Authentication"
 
 // KeycloakWithConfig ... with config
 func KeycloakWithConfig(config KeycloakConfig) func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -69,7 +62,8 @@ func (config *KeycloakConfig) getKeycloakURLFor(operation string) string {
 		config.Protocol, config.Hostname, config.Port, config.Realm, operation)
 }
 
-// IsAuthenticated returns true if the user submits a valid JWT token.
+// IsAuthenticated returns true if the user submitted a valid JWT token.
+// TODO Add caching
 func (config *KeycloakConfig) isAuthenticated(c echo.Context) bool {
 	token := c.Request().Header.Get("Authorization")
 	if token == "" {
@@ -77,11 +71,11 @@ func (config *KeycloakConfig) isAuthenticated(c echo.Context) bool {
 		return false
 	}
 
+	// Access userinfo in keycloak using the provided token to check if the token is valid.
 	req, err := http.NewRequest("GET", config.getKeycloakURLFor("userinfo"), nil)
 	req.Header.Add("Authorization", token)
 	cl := &http.Client{}
 	resp, err := cl.Do(req)
-
 	if err != nil {
 		log.Info("Unable to authorize with token")
 		return false
@@ -89,12 +83,13 @@ func (config *KeycloakConfig) isAuthenticated(c echo.Context) bool {
 	if resp.StatusCode == 200 {
 		return true
 	}
-
 	return false
 }
 
 // addUserInfoToContext adds the information defined in the token to the user context.
-func addUserInfoToContext(c echo.Context) {
+func addUserInfoToContext(cc echo.Context) {
+	c := cc.(*context.CustomContext)
+
 	// If authenticated, add username and roles to request context for later processing.
 	// See https://github.com/dgrijalva/jwt-go/issues/37 for jwt.Parse with nil
 	tokenString := c.Request().Header.Get("Authorization")[7:]
@@ -117,7 +112,7 @@ func addUserInfoToContext(c echo.Context) {
 		Username: claims["preferred_username"].(string),
 		Roles:    roles,
 	}
-	c.Set(ContextName, auth)
+	c.Authentication = auth
 }
 
 // AddAuthenticationEndpoints adds the login endpoint for authentication.
@@ -146,6 +141,7 @@ func AddAuthenticationEndpoints(e *echo.Echo) {
 		m["refresh_token"] = []string{r.RefreshToken}
 		m["username"] = []string{r.Username}
 		m["password"] = []string{r.Password}
+		// TODO use method
 		resp, err := http.PostForm("http://localhost:8081/auth/realms/mlesniak/protocol/openid-connect/logout", m)
 		if err != nil {
 			log.Warn(err)
@@ -181,6 +177,7 @@ func AddAuthenticationEndpoints(e *echo.Echo) {
 			m["password"] = []string{r.Password}
 			m["grant_type"] = []string{"password"}
 			m["client_id"] = []string{"api"}
+			// TODO use method
 			resp, err := http.PostForm("http://localhost:8081/auth/realms/mlesniak/protocol/openid-connect/token", m)
 			if err != nil {
 				panic(err)
