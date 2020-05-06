@@ -12,6 +12,7 @@ import (
 	logger "github.com/mlesniak/go-demo/pkg/log"
 )
 
+// TODO change log library to zerolog.
 var log = logger.New()
 
 // KeycloakConfig defines configuration options for the middleware.
@@ -21,13 +22,30 @@ type KeycloakConfig struct {
 	Hostname   string
 	Port       string
 	Realm      string
+
+	// TODO fields for login and logout url
+}
+
+// request is the default request for login and refresh attempts.
+// TODO HAVING A SINGLE ENDPOINT FOR LOGIN AND REFRESH IS A STUPID IDEA. CHANGE THIS.
+type request struct {
+	Username     string `json:"username"`
+	Password     string `json:"password"`
+	RefreshToken string `json:"refreshToken"`
+}
+
+type response struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 }
 
 // KeycloakWithConfig ... with config
-func KeycloakWithConfig(config KeycloakConfig) func(next echo.HandlerFunc) echo.HandlerFunc {
+func KeycloakWithConfig(e *echo.Echo, config KeycloakConfig) func(next echo.HandlerFunc) echo.HandlerFunc {
 	if config.Protocol == "" || config.Hostname == "" || config.Port == "" || config.Realm == "" {
 		panic("The keycloak configuration is invalid, at least one property is empty.")
 	}
+
+	config.addEndpoints(e)
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -115,15 +133,62 @@ func addUserInfoToContext(cc echo.Context) {
 	c.Authentication = auth
 }
 
-// AddAuthenticationEndpoints adds the login endpoint for authentication.
-// WILL BE HEAVILY REFACTORED INTO ITS OWN PACKAGE...
-func AddAuthenticationEndpoints(e *echo.Echo) {
-	type request struct {
-		Username     string `json:"username"`
-		Password     string `json:"password"`
-		RefreshToken string `json:"refreshToken"`
-	}
+func (config *KeycloakConfig) addEndpoints(e *echo.Echo) {
+	config.addEndpointLogin(e)
+	config.addEndpointLogout(e)
+}
 
+func (config *KeycloakConfig) addEndpointLogin(e *echo.Echo) {
+	e.POST("/api/login", func(cc echo.Context) error {
+		c := cc.(*context.CustomContext)
+		c.Username()
+
+		var r request
+		c.Bind(&r)
+
+		if r.Username == "" && r.Password == "" && r.RefreshToken == "" {
+			return c.NoContent(http.StatusBadRequest)
+		}
+
+		// Case: initial login, i.e. no refresh token submitted.
+		if r.Username != "" && r.Password != "" && r.RefreshToken == "" {
+			return config.handleInitialLogin(c, r)
+		}
+
+		// TODO implement refresh token
+
+		return c.String(http.StatusOK, "/api/login case not implemented")
+	})
+}
+
+func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r request) error {
+	log.WithField("username", r.Username).Info("Login attempt")
+	// Send request to keycloak
+	m := make(map[string][]string)
+	m["username"] = []string{r.Username}
+	m["password"] = []string{r.Password}
+	m["grant_type"] = []string{"password"}
+	m["client_id"] = []string{"api"}
+	resp, err := http.PostForm(config.getKeycloakURLFor("token"), m)
+	if err != nil {
+		panic(err)
+	}
+	if resp.StatusCode != 200 {
+		panic("Not working:" + string(resp.StatusCode))
+	}
+	log.WithField("username", r.Username).Info("Login successful")
+	dec := json.NewDecoder(resp.Body)
+	var v map[string]string
+	dec.Decode(&v)
+
+	token := response{
+		AccessToken:  v["access_token"],
+		RefreshToken: v["refresh_token"],
+	}
+	return c.JSON(http.StatusOK, token)
+}
+
+func (config *KeycloakConfig) addEndpointLogout(e *echo.Echo) {
 	e.POST("/api/logout", func(c echo.Context) error {
 		log.Info("/api/logout called")
 		token := c.Request().Header.Get("Authorization")
@@ -132,8 +197,6 @@ func AddAuthenticationEndpoints(e *echo.Echo) {
 			return c.NoContent(http.StatusOK)
 		}
 
-		// c.Request().ParseForm()
-		// r := c.Request().Form.Get("request_token")
 		var r request
 		c.Bind(&r)
 		m := make(map[string][]string)
@@ -141,8 +204,7 @@ func AddAuthenticationEndpoints(e *echo.Echo) {
 		m["refresh_token"] = []string{r.RefreshToken}
 		m["username"] = []string{r.Username}
 		m["password"] = []string{r.Password}
-		// TODO use method
-		resp, err := http.PostForm("http://localhost:8081/auth/realms/mlesniak/protocol/openid-connect/logout", m)
+		resp, err := http.PostForm(config.getKeycloakURLFor("logout"), m)
 		if err != nil {
 			log.Warn(err)
 			return c.NoContent(http.StatusInternalServerError)
@@ -154,49 +216,5 @@ func AddAuthenticationEndpoints(e *echo.Echo) {
 
 		log.Info("Oops: ", resp.StatusCode)
 		return c.NoContent(http.StatusInternalServerError)
-	})
-
-	// This endpoint can be used for both first and later authentication with refresh tokens.
-	e.POST("/api/login", func(cc echo.Context) error {
-		c := cc.(*context.CustomContext)
-		c.Username()
-
-		type response struct {
-			AccessToken  string `json:"accessToken"`
-			RefreshToken string `json:"refreshToken"`
-		}
-
-		var r request
-		c.Bind(&r)
-
-		if r.Username != "" && r.Password != "" {
-			log.WithField("username", r.Username).Info("Login attempt")
-			// Send request to keycloak
-			m := make(map[string][]string)
-			m["username"] = []string{r.Username}
-			m["password"] = []string{r.Password}
-			m["grant_type"] = []string{"password"}
-			m["client_id"] = []string{"api"}
-			// TODO use method
-			resp, err := http.PostForm("http://localhost:8081/auth/realms/mlesniak/protocol/openid-connect/token", m)
-			if err != nil {
-				panic(err)
-			}
-			if resp.StatusCode != 200 {
-				panic("Not working:" + string(resp.StatusCode))
-			}
-			log.WithField("username", r.Username).Info("Login successful")
-			dec := json.NewDecoder(resp.Body)
-			var v map[string]string
-			dec.Decode(&v)
-
-			token := response{
-				AccessToken:  v["access_token"],
-				RefreshToken: v["refresh_token"],
-			}
-			return c.JSON(http.StatusOK, token)
-		}
-
-		return c.String(http.StatusOK, "/api/login case not implemented")
 	})
 }

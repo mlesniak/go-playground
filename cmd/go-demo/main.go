@@ -19,7 +19,7 @@ func main() {
 	// Middlewares.
 	// TODO Use RequestId and add to custom context
 	e.Use(context.CreateCustomContext)
-	e.Use(authentication.KeycloakWithConfig(authentication.KeycloakConfig{
+	e.Use(authentication.KeycloakWithConfig(e, authentication.KeycloakConfig{
 		IgnoredURL: []string{
 			"/api/login",
 			"/api/version",
@@ -32,7 +32,6 @@ func main() {
 
 	// Endpoints.
 	version.AddVersionEndpoint(e)
-	authentication.AddAuthenticationEndpoints(e)
 	demo.AddEndpoint(e)
 
 	start(e)
