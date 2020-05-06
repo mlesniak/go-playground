@@ -6,8 +6,9 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
-	logger "github.com/mlesniak/go-demo/pkg/log"
+	"github.com/mlesniak/go-demo/pkg/context"
 	"github.com/mlesniak/go-demo/pkg/errors"
+	logger "github.com/mlesniak/go-demo/pkg/log"
 )
 
 var log = logger.New()
@@ -150,7 +151,10 @@ func AddAuthenticationEndpoints(e *echo.Echo) {
 	})
 
 	// This endpoint can be used for both first and later authentication with refresh tokens.
-	e.POST("/api/login", func(c echo.Context) error {
+	e.POST("/api/login", func(cc echo.Context) error {
+		c := cc.(*context.CustomContext)
+		c.Foo()
+
 		type response struct {
 			AccessToken  string `json:"accessToken"`
 			RefreshToken string `json:"refreshToken"`

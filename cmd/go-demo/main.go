@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/mlesniak/go-demo/pkg/authentication"
+	"github.com/mlesniak/go-demo/pkg/context"
 	"github.com/mlesniak/go-demo/pkg/demo"
 	logger "github.com/mlesniak/go-demo/pkg/log"
 	"github.com/mlesniak/go-demo/pkg/version"
@@ -17,6 +18,12 @@ func main() {
 
 	// Middlewares.
 	// TODO Use RequestId and add to custom context
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			cc := &context.CustomContext{c}
+			return next(cc)
+		}
+	})
 	e.Use(authentication.KeycloakWithConfig(authentication.KeycloakConfig{
 		IgnoredURL: []string{
 			"/api/login",
@@ -31,7 +38,6 @@ func main() {
 
 	start(e)
 }
-
 
 func newEchoServer() *echo.Echo {
 	e := echo.New()
@@ -48,4 +54,3 @@ func start(e *echo.Echo) {
 	}
 	log.Info(e.Start(":" + port))
 }
-
