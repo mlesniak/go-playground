@@ -7,9 +7,9 @@ import (
 
 // AddUser adds a user field to log if it was pre-filled.
 func AddUser(log *logrus.Entry, c echo.Context) *logrus.Entry {
-	u := c.Get(Context)
+	u := c.Get(ContextName)
 	if t, ok := u.(Authentication); ok {
-		return log.WithField("user", t.Username)
+		return log.WithField("username", t.Username)
 	}
 
 	return log
