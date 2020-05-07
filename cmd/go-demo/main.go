@@ -4,14 +4,16 @@ import (
 	"os"
 
 	"github.com/labstack/echo/v4"
-	"github.com/rs/zerolog/log"
 	"github.com/mlesniak/go-demo/pkg/authentication"
 	"github.com/mlesniak/go-demo/pkg/context"
 	"github.com/mlesniak/go-demo/pkg/demo"
 	"github.com/mlesniak/go-demo/pkg/version"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
+	configureLogging()
 	e := newEchoServer()
 
 	// Middlewares.
@@ -54,5 +56,15 @@ func start(e *echo.Echo) {
 	err := e.Start(":" + port)
 	if err != nil {
 		log.Panic().Msg(err.Error())
+	}
+}
+
+func configureLogging() {
+	// On local environment ignore all file logging.
+	env := os.Getenv("ENVIRONMENT")
+	if env == "local" {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		log.Info().Msg("Local environment, using solely console output")
+		return
 	}
 }
