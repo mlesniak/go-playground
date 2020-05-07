@@ -22,10 +22,10 @@ func main() {
 	e.Use(authentication.KeycloakWithConfig(e, authentication.KeycloakConfig{
 		Protocol: "http",
 		Hostname: "localhost",
-		Port: "8081",
-		Realm: "mlesniak",
+		Port:     "8081",
+		Realm:    "mlesniak",
 
-		LoginURL: "/api/login",
+		LoginURL:  "/api/login",
 		LogoutURL: "/api/logout",
 		IgnoredURL: []string{
 			"/api/login",
@@ -65,6 +65,17 @@ func configureLogging() {
 	if env == "local" {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		log.Info().Msg("Local environment, using solely console output")
-		return
+	} else {
+		// Loggint to json by default.
+		zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
+		zerolog.TimestampFieldName = "@timestamp"
+	}
+
+	// Add commit hash to each entry.
+	commit := os.Getenv("COMMIT")
+	if commit == "" {
+		log.Warn().Msg("COMMIT environment variable not set, won't record commit hash on each request")
+	} else {
+		log.Logger = log.With().Str("commit", commit).Logger()
 	}
 }
