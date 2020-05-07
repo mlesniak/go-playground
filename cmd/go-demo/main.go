@@ -20,14 +20,17 @@ func main() {
 	// TODO Use RequestId and add to custom context
 	e.Use(context.CreateCustomContext)
 	e.Use(authentication.KeycloakWithConfig(e, authentication.KeycloakConfig{
-		IgnoredURL: []string{
-			"/api/login",
-			"/api/version",
-		},
 		Protocol: "http",
 		Hostname: "localhost",
 		Port: "8081",
 		Realm: "mlesniak",
+
+		LoginURL: "/api/login",
+		LogoutURL: "/api/logout",
+		IgnoredURL: []string{
+			"/api/login",
+			"/api/version",
+		},
 	}))
 
 	// Endpoints.

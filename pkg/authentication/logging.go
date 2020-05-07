@@ -7,6 +7,7 @@ import (
 )
 
 // AddUser adds a user field to log if it was pre-filled.
+// TODO refactor after logging refactoring
 func AddUser(log *logrus.Entry, cc echo.Context) *logrus.Entry {
 	c := cc.(*context.CustomContext)
 

@@ -17,13 +17,15 @@ var log = logger.New()
 
 // KeycloakConfig defines configuration options for the middleware.
 type KeycloakConfig struct {
-	IgnoredURL []string
 	Protocol   string
 	Hostname   string
 	Port       string
 	Realm      string
 
-	// TODO fields for login and logout url
+	IgnoredURL []string
+	LoginURL   string
+	LogoutURL  string
+	// RefreshURL string
 }
 
 // request is the default request for login and refresh attempts.
@@ -41,8 +43,8 @@ type response struct {
 
 // KeycloakWithConfig ... with config
 func KeycloakWithConfig(e *echo.Echo, config KeycloakConfig) func(next echo.HandlerFunc) echo.HandlerFunc {
-	if config.Protocol == "" || config.Hostname == "" || config.Port == "" || config.Realm == "" {
-		panic("The keycloak configuration is invalid, at least one property is empty.")
+	if config.Protocol == "" || config.Hostname == "" || config.Port == "" || config.Realm == "" || config.LoginURL == "" || config.LogoutURL == "" {
+		panic("The keycloak configuration is invalid, at least one required property is empty.")
 	}
 
 	config.addEndpoints(e)
@@ -57,15 +59,16 @@ func KeycloakWithConfig(e *echo.Echo, config KeycloakConfig) func(next echo.Hand
 					break
 				}
 			}
-
 			if shouldURLbeChecked {
+				// Has a valid token been submitted?
 				if !config.isAuthenticated(c) {
 					return c.JSON(http.StatusUnauthorized, errors.Response{"Token is invalid"})
 				}
+				// Everything is ok, add authentication info to request context.
 				addUserInfoToContext(c)
 			}
 
-			// Continue our chain.
+			// Continue chain.
 			if err := next(c); err != nil {
 				c.Error(err)
 			}
@@ -74,6 +77,7 @@ func KeycloakWithConfig(e *echo.Echo, config KeycloakConfig) func(next echo.Hand
 	}
 }
 
+// getKeycloakURLFor returns the fully qualified URL for the given operations based on the pre-defined configuration.
 func (config *KeycloakConfig) getKeycloakURLFor(operation string) string {
 	return fmt.Sprintf(
 		"%s://%s:%s/auth/realms/%s/protocol/openid-connect/%s",
@@ -81,7 +85,7 @@ func (config *KeycloakConfig) getKeycloakURLFor(operation string) string {
 }
 
 // IsAuthenticated returns true if the user submitted a valid JWT token.
-// TODO Add caching
+// TODO Add caching while respecting the expiration date.
 func (config *KeycloakConfig) isAuthenticated(c echo.Context) bool {
 	token := c.Request().Header.Get("Authorization")
 	if token == "" {
@@ -133,13 +137,14 @@ func addUserInfoToContext(cc echo.Context) {
 	c.Authentication = auth
 }
 
+// addEndpoints adds all relevant endpoints for authentication.
 func (config *KeycloakConfig) addEndpoints(e *echo.Echo) {
 	config.addEndpointLogin(e)
 	config.addEndpointLogout(e)
 }
 
 func (config *KeycloakConfig) addEndpointLogin(e *echo.Echo) {
-	e.POST("/api/login", func(cc echo.Context) error {
+	e.POST(config.LoginURL, func(cc echo.Context) error {
 		c := cc.(*context.CustomContext)
 		c.Username()
 
@@ -189,7 +194,7 @@ func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r req
 }
 
 func (config *KeycloakConfig) addEndpointLogout(e *echo.Echo) {
-	e.POST("/api/logout", func(c echo.Context) error {
+	e.POST(config.LogoutURL, func(c echo.Context) error {
 		log.Info("/api/logout called")
 		token := c.Request().Header.Get("Authorization")
 		if token == "" {
