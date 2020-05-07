@@ -9,11 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/mlesniak/go-demo/pkg/context"
 	"github.com/mlesniak/go-demo/pkg/errors"
-	logger "github.com/mlesniak/go-demo/pkg/log"
 )
-
-// TODO change log library to zerolog.
-var log = logger.New()
 
 // KeycloakConfig defines configuration options for the middleware.
 type KeycloakConfig struct {
@@ -28,10 +24,15 @@ type KeycloakConfig struct {
 	// RefreshURL string
 }
 
-// requestLogin is the default request for login attempts.
 type requestLogin struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+type requestLogout struct {
+	Username     string `json:"username"`
+	Password     string `json:"password"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 type response struct {
@@ -88,7 +89,6 @@ func (config *KeycloakConfig) getKeycloakURLFor(operation string) string {
 func (config *KeycloakConfig) isAuthenticated(c echo.Context) bool {
 	token := c.Request().Header.Get("Authorization")
 	if token == "" {
-		log.Info("No token provided in Authorization header")
 		return false
 	}
 
@@ -98,7 +98,6 @@ func (config *KeycloakConfig) isAuthenticated(c echo.Context) bool {
 	cl := &http.Client{}
 	resp, err := cl.Do(req)
 	if err != nil {
-		log.Info("Unable to authorize with token")
 		return false
 	}
 	if resp.StatusCode == 200 {
@@ -158,7 +157,6 @@ func (config *KeycloakConfig) addEndpointLogin(e *echo.Echo) {
 }
 
 func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r requestLogin) error {
-	log.WithField("username", r.Username).Info("Login attempt")
 	// Send request to keycloak
 	m := make(map[string][]string)
 	m["username"] = []string{r.Username}
@@ -172,7 +170,6 @@ func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r req
 	if resp.StatusCode != 200 {
 		panic("Not working:" + string(resp.StatusCode))
 	}
-	log.WithField("username", r.Username).Info("Login successful")
 	dec := json.NewDecoder(resp.Body)
 	var v map[string]string
 	dec.Decode(&v)
@@ -186,14 +183,12 @@ func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r req
 
 func (config *KeycloakConfig) addEndpointLogout(e *echo.Echo) {
 	e.POST(config.LogoutURL, func(c echo.Context) error {
-		log.Info("/api/logout called")
 		token := c.Request().Header.Get("Authorization")
 		if token == "" {
-			log.Info("/logout called for non-authorized user")
 			return c.NoContent(http.StatusOK)
 		}
 
-		var r requestLogin
+		var r requestLogout
 		c.Bind(&r)
 		m := make(map[string][]string)
 		m["client_id"] = []string{"api"}
@@ -202,15 +197,12 @@ func (config *KeycloakConfig) addEndpointLogout(e *echo.Echo) {
 		m["password"] = []string{r.Password}
 		resp, err := http.PostForm(config.getKeycloakURLFor("logout"), m)
 		if err != nil {
-			log.Warn(err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 		if resp.StatusCode == 204 {
-			log.Info("Logout successful")
 			return c.NoContent(http.StatusOK)
 		}
 
-		log.Info("Oops: ", resp.StatusCode)
 		return c.NoContent(http.StatusInternalServerError)
 	})
 }
