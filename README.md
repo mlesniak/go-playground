@@ -49,7 +49,6 @@ We use our app as a proxy
 
 - [ ] Refactor authentication package
 - [ ] Add support for refreshToken
-- [ ] Use zerolog as logging library
 - [ ] Add logging to authentication
 - [ ] Deploy keycloak to K8s cluster
 - [ ] Cache token to prevent accessing keycloak on each request
