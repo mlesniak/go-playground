@@ -17,10 +17,10 @@ var log = logger.New()
 
 // KeycloakConfig defines configuration options for the middleware.
 type KeycloakConfig struct {
-	Protocol   string
-	Hostname   string
-	Port       string
-	Realm      string
+	Protocol string
+	Hostname string
+	Port     string
+	Realm    string
 
 	IgnoredURL []string
 	LoginURL   string
@@ -28,12 +28,10 @@ type KeycloakConfig struct {
 	// RefreshURL string
 }
 
-// request is the default request for login and refresh attempts.
-// TODO HAVING A SINGLE ENDPOINT FOR LOGIN AND REFRESH IS A STUPID IDEA. CHANGE THIS.
-type request struct {
-	Username     string `json:"username"`
-	Password     string `json:"password"`
-	RefreshToken string `json:"refreshToken"`
+// requestLogin is the default request for login attempts.
+type requestLogin struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 type response struct {
@@ -41,14 +39,14 @@ type response struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
-// KeycloakWithConfig ... with config
+// KeycloakWithConfig registers authentication endpoints and handles token validation on each request.
 func KeycloakWithConfig(e *echo.Echo, config KeycloakConfig) func(next echo.HandlerFunc) echo.HandlerFunc {
 	if config.Protocol == "" || config.Hostname == "" || config.Port == "" || config.Realm == "" || config.LoginURL == "" || config.LogoutURL == "" {
 		panic("The keycloak configuration is invalid, at least one required property is empty.")
 	}
-
 	config.addEndpoints(e)
 
+	// Check token on each request.
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			// Check for ignored URLS such as login routes.
@@ -62,7 +60,7 @@ func KeycloakWithConfig(e *echo.Echo, config KeycloakConfig) func(next echo.Hand
 			if shouldURLbeChecked {
 				// Has a valid token been submitted?
 				if !config.isAuthenticated(c) {
-					return c.JSON(http.StatusUnauthorized, errors.Response{"Token is invalid"})
+					return c.JSON(http.StatusUnauthorized, errors.NewResponse("Token is invalid"))
 				}
 				// Everything is ok, add authentication info to request context.
 				addUserInfoToContext(c)
@@ -86,6 +84,7 @@ func (config *KeycloakConfig) getKeycloakURLFor(operation string) string {
 
 // IsAuthenticated returns true if the user submitted a valid JWT token.
 // TODO Add caching while respecting the expiration date.
+// TODO Use error instead of bool
 func (config *KeycloakConfig) isAuthenticated(c echo.Context) bool {
 	token := c.Request().Header.Get("Authorization")
 	if token == "" {
@@ -109,10 +108,11 @@ func (config *KeycloakConfig) isAuthenticated(c echo.Context) bool {
 }
 
 // addUserInfoToContext adds the information defined in the token to the user context.
+//
+// We assume that the token in the header has already been checked and is a vaild JWT token.
 func addUserInfoToContext(cc echo.Context) {
 	c := cc.(*context.CustomContext)
 
-	// If authenticated, add username and roles to request context for later processing.
 	// See https://github.com/dgrijalva/jwt-go/issues/37 for jwt.Parse with nil
 	tokenString := c.Request().Header.Get("Authorization")[7:]
 	token, _ := jwt.Parse(tokenString, nil)
@@ -146,27 +146,18 @@ func (config *KeycloakConfig) addEndpoints(e *echo.Echo) {
 func (config *KeycloakConfig) addEndpointLogin(e *echo.Echo) {
 	e.POST(config.LoginURL, func(cc echo.Context) error {
 		c := cc.(*context.CustomContext)
-		c.Username()
 
-		var r request
+		var r requestLogin
 		c.Bind(&r)
-
-		if r.Username == "" && r.Password == "" && r.RefreshToken == "" {
-			return c.NoContent(http.StatusBadRequest)
+		if r.Username == "" && r.Password == "" {
+			return c.JSON(http.StatusBadRequest, errors.NewResponse("Username and password are empty"))
 		}
 
-		// Case: initial login, i.e. no refresh token submitted.
-		if r.Username != "" && r.Password != "" && r.RefreshToken == "" {
-			return config.handleInitialLogin(c, r)
-		}
-
-		// TODO implement refresh token
-
-		return c.String(http.StatusOK, "/api/login case not implemented")
+		return config.handleInitialLogin(c, r)
 	})
 }
 
-func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r request) error {
+func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r requestLogin) error {
 	log.WithField("username", r.Username).Info("Login attempt")
 	// Send request to keycloak
 	m := make(map[string][]string)
@@ -202,7 +193,7 @@ func (config *KeycloakConfig) addEndpointLogout(e *echo.Echo) {
 			return c.NoContent(http.StatusOK)
 		}
 
-		var r request
+		var r requestLogin
 		c.Bind(&r)
 		m := make(map[string][]string)
 		m["client_id"] = []string{"api"}
