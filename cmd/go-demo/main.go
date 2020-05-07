@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
+	"github.com/rs/zerolog/log"
 	"github.com/mlesniak/go-demo/pkg/authentication"
 	"github.com/mlesniak/go-demo/pkg/context"
 	"github.com/mlesniak/go-demo/pkg/demo"
@@ -46,10 +46,13 @@ func newEchoServer() *echo.Echo {
 }
 
 func start(e *echo.Echo) {
-	log.Info("Application started")
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	log.Info(e.Start(":" + port))
+	log.Info().Str("port", port).Msg("Application started")
+	err := e.Start(":" + port)
+	if err != nil {
+		log.Panic().Msg(err.Error())
+	}
 }
