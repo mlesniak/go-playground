@@ -67,7 +67,7 @@ func configureLogging() {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		log.Info().Msg("Local environment, using solely console output")
 	} else {
-		// Loggint to json by default.
+		// Logging to json by default.
 		zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
 		zerolog.TimestampFieldName = "@timestamp"
 	}
