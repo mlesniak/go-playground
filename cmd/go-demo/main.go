@@ -4,14 +4,12 @@ import (
 	"os"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/mlesniak/go-demo/pkg/authentication"
 	"github.com/mlesniak/go-demo/pkg/context"
 	"github.com/mlesniak/go-demo/pkg/demo"
-	logger "github.com/mlesniak/go-demo/pkg/log"
 	"github.com/mlesniak/go-demo/pkg/version"
 )
-
-var log = logger.New()
 
 func main() {
 	e := newEchoServer()
