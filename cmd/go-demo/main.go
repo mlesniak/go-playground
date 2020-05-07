@@ -20,6 +20,7 @@ func main() {
 	// TODO Use RequestId and add to custom context
 	e.Use(context.CreateCustomContext)
 	e.Use(authentication.KeycloakWithConfig(e, authentication.KeycloakConfig{
+		// TODO Use environment variables
 		Protocol: "http",
 		Hostname: "localhost",
 		Port:     "8081",
