@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/mlesniak/go-demo/pkg/errors"
+	"github.com/mlesniak/go-demo/pkg/response"
 )
 
 // AddEndpoint adds the endpoint for testing purposes.
@@ -13,7 +13,7 @@ func AddEndpoint(e *echo.Echo) {
 		Number int `json:"number"`
 	}
 
-	type response struct {
+	type numberResponse struct {
 		Number int `json:"number"`
 	}
 
@@ -23,9 +23,9 @@ func AddEndpoint(e *echo.Echo) {
 		var json request
 		err := c.Bind(&json)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, errors.NewResponse("Unable to parse request"))
+			return c.JSON(http.StatusBadRequest, response.NewError("Unable to parse request"))
 		}
-		resp := response{json.Number + 1}
+		resp := numberResponse{json.Number + 1}
 		return c.JSON(http.StatusOK, resp)
 	})
 }

@@ -8,7 +8,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/mlesniak/go-demo/pkg/context"
-	"github.com/mlesniak/go-demo/pkg/errors"
+	"github.com/mlesniak/go-demo/pkg/response"
+	"github.com/rs/zerolog/log"
 )
 
 // KeycloakConfig defines configuration options for the middleware.
@@ -24,18 +25,18 @@ type KeycloakConfig struct {
 	// RefreshURL string
 }
 
-type requestLogin struct {
+type loginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-type requestLogout struct {
+type logoutRequest struct {
 	Username     string `json:"username"`
 	Password     string `json:"password"`
 	RefreshToken string `json:"refresh_token"`
 }
 
-type response struct {
+type authenticationResponse struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 }
@@ -60,11 +61,15 @@ func KeycloakWithConfig(e *echo.Echo, config KeycloakConfig) func(next echo.Hand
 			}
 			if shouldURLbeChecked {
 				// Has a valid token been submitted?
-				if !config.isAuthenticated(c) {
-					return c.JSON(http.StatusUnauthorized, errors.NewResponse("Token is invalid"))
+				if err := config.isAuthenticated(c); err != nil {
+					e := err.(Error)
+					log.Info().Str("token", e.Token).Msg(e.Text)
+					return c.JSON(http.StatusUnauthorized, response.NewError("Token is invalid"))
 				}
 				// Everything is ok, add authentication info to request context.
 				addUserInfoToContext(c)
+				cc := c.(*context.CustomContext)
+				log.Info().Str("username", cc.Username()).Msg("Successful authentication by token")
 			}
 
 			// Continue chain.
@@ -85,11 +90,10 @@ func (config *KeycloakConfig) getKeycloakURLFor(operation string) string {
 
 // IsAuthenticated returns true if the user submitted a valid JWT token.
 // TODO Add caching while respecting the expiration date.
-// TODO Use error instead of bool
-func (config *KeycloakConfig) isAuthenticated(c echo.Context) bool {
+func (config *KeycloakConfig) isAuthenticated(c echo.Context) error {
 	token := c.Request().Header.Get("Authorization")
 	if token == "" {
-		return false
+		return NewError(nil, "Empty token", token)
 	}
 
 	// Access userinfo in keycloak using the provided token to check if the token is valid.
@@ -97,13 +101,18 @@ func (config *KeycloakConfig) isAuthenticated(c echo.Context) bool {
 	req.Header.Add("Authorization", token)
 	cl := &http.Client{}
 	resp, err := cl.Do(req)
+
 	if err != nil {
-		return false
+		return NewError(nil, "Unable to get userinfo", token)
 	}
 	if resp.StatusCode == 200 {
-		return true
+		return nil
 	}
-	return false
+	if resp.StatusCode%100 == 4 {
+		return NewError(nil, "Unauthorizatied request", token)
+	}
+
+	return NewError(nil, "Unknown error", token)
 }
 
 // addUserInfoToContext adds the information defined in the token to the user context.
@@ -146,17 +155,17 @@ func (config *KeycloakConfig) addEndpointLogin(e *echo.Echo) {
 	e.POST(config.LoginURL, func(cc echo.Context) error {
 		c := cc.(*context.CustomContext)
 
-		var r requestLogin
+		var r loginRequest
 		c.Bind(&r)
 		if r.Username == "" && r.Password == "" {
-			return c.JSON(http.StatusBadRequest, errors.NewResponse("Username and password are empty"))
+			return c.JSON(http.StatusBadRequest, response.NewError("Username and password are empty"))
 		}
 
 		return config.handleInitialLogin(c, r)
 	})
 }
 
-func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r requestLogin) error {
+func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r loginRequest) error {
 	// Send request to keycloak
 	m := make(map[string][]string)
 	m["username"] = []string{r.Username}
@@ -165,19 +174,20 @@ func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r req
 	m["client_id"] = []string{"api"}
 	resp, err := http.PostForm(config.getKeycloakURLFor("token"), m)
 	if err != nil {
-		panic(err)
+		return NewError(err, "Unknown error", "")
 	}
-	if resp.StatusCode != 200 {
-		panic("Not working:" + string(resp.StatusCode))
+	if resp.StatusCode%100 == 4 {
+		return NewError(err, "Unauthorized", "")
 	}
 	dec := json.NewDecoder(resp.Body)
 	var v map[string]string
 	dec.Decode(&v)
 
-	token := response{
+	token := authenticationResponse{
 		AccessToken:  v["access_token"],
 		RefreshToken: v["refresh_token"],
 	}
+	log.Info().Str("username", r.Username).Msg("Successful login")
 	return c.JSON(http.StatusOK, token)
 }
 
@@ -188,7 +198,7 @@ func (config *KeycloakConfig) addEndpointLogout(e *echo.Echo) {
 			return c.NoContent(http.StatusOK)
 		}
 
-		var r requestLogout
+		var r logoutRequest
 		c.Bind(&r)
 		m := make(map[string][]string)
 		m["client_id"] = []string{"api"}
