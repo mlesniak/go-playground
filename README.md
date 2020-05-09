@@ -47,7 +47,6 @@ We use our app as a proxy
 
 # Next steps
 
-- [ ] Add caching to authentication
 - [ ] Log request id on each request-response flow
 - [ ] Add support for refreshToken
 - [ ] Deploy keycloak to K8s cluster

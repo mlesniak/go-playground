@@ -95,7 +95,6 @@ func (config *KeycloakConfig) getKeycloakURLFor(operation string) string {
 }
 
 // IsAuthenticated returns true if the user submitted a valid JWT token.
-// TODO Add caching while respecting the expiration date.
 func (config *KeycloakConfig) isAuthenticated(c echo.Context) error {
 	token := c.Request().Header.Get("Authorization")
 	if token == "" {
@@ -109,11 +108,10 @@ func (config *KeycloakConfig) isAuthenticated(c echo.Context) error {
 	}
 	expiresAt, found := cache[jwtToken]
 	if found {
-		log.Info().Msg("Found token in cache")
 		now := time.Now().Unix()
 		if expiresAt > now {
 			log.Info().
-				Str("token", token).
+				Str("token", jwtToken).
 				Int64("expiresAt", expiresAt).
 				Msg("Accepting token from cache")
 			return nil
@@ -125,8 +123,6 @@ func (config *KeycloakConfig) isAuthenticated(c echo.Context) error {
 			Int64("expiresAt", expiresAt).
 			Msg("Remove expired token from cache")
 		delete(cache, token)
-	} else {
-		log.Info().Msg("token not found")
 	}
 
 	// Access userinfo in keycloak using the provided token to check if the token is valid.
@@ -140,7 +136,9 @@ func (config *KeycloakConfig) isAuthenticated(c echo.Context) error {
 	}
 	if resp.StatusCode == 200 {
 		// Happy flow.
-		// TODO Add here, too.
+		// Add token on successful authentication w/o cache here, too. This is necessary
+		// if the server has been restarted in the meantime while the user has still an active token.
+		addTokenToCache(jwtToken)
 		return nil
 	}
 	if resp.StatusCode/100 == 4 {
