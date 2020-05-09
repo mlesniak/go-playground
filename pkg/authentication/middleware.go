@@ -2,6 +2,7 @@ package authentication
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -62,7 +63,7 @@ func KeycloakWithConfig(e *echo.Echo, config KeycloakConfig) func(next echo.Hand
 			if shouldURLbeChecked {
 				// Has a valid token been submitted?
 				if err := config.isAuthenticated(c); err != nil {
-					e := err.(Error)
+					e := err.(authenticationError)
 					log.Info().Str("token", e.Token).Msg(e.Text)
 					return c.JSON(http.StatusUnauthorized, response.NewError("Token is invalid"))
 				}
@@ -93,7 +94,7 @@ func (config *KeycloakConfig) getKeycloakURLFor(operation string) string {
 func (config *KeycloakConfig) isAuthenticated(c echo.Context) error {
 	token := c.Request().Header.Get("Authorization")
 	if token == "" {
-		return NewError(nil, "Empty token", token)
+		return newAuthenticationError("Empty token", token, nil)
 	}
 
 	// Access userinfo in keycloak using the provided token to check if the token is valid.
@@ -103,16 +104,17 @@ func (config *KeycloakConfig) isAuthenticated(c echo.Context) error {
 	resp, err := cl.Do(req)
 
 	if err != nil {
-		return NewError(nil, "Unable to get userinfo", token)
+		return newAuthenticationError("Unable to get userinfo", token, err)
 	}
 	if resp.StatusCode == 200 {
+		// Happy flow.
 		return nil
 	}
 	if resp.StatusCode/100 == 4 {
-		return NewError(nil, "Unauthorizatied request", token)
+		return newAuthenticationError("Unauthorizatied request", token, nil)
 	}
 
-	return NewError(nil, "Unknown error", token)
+	return newAuthenticationError("Unknown error", token, nil)
 }
 
 // addUserInfoToContext adds the information defined in the token to the user context.
@@ -163,9 +165,8 @@ func (config *KeycloakConfig) addEndpointLogin(e *echo.Echo) {
 
 		token, err := config.handleInitialLogin(c, r)
 		if err != nil {
-			e := err.(Error)
-			log.Info().Msg("Login failed: " + e.Text)
-			return c.JSON(http.StatusUnauthorized, response.NewError("Login failed: "+e.Text))
+			log.Info().Msg("Login failed: " + err.Error())
+			return c.JSON(http.StatusUnauthorized, response.NewError(err.Error()))
 		}
 
 		return c.JSON(http.StatusOK, token)
@@ -181,11 +182,11 @@ func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r log
 	m["client_id"] = []string{"api"}
 	resp, err := http.PostForm(config.getKeycloakURLFor("token"), m)
 	if err != nil {
-		return nil, NewError(err, "Unknown error", "")
+		return nil, errors.New("Unknown error")
 	}
 	log.Info().Int("code", resp.StatusCode).Msg("Status code")
 	if resp.StatusCode/100 == 4 {
-		return nil, NewError(err, "Unauthorized", "")
+		return nil, errors.New("Unauthorized")
 	}
 	dec := json.NewDecoder(resp.Body)
 	var v map[string]string

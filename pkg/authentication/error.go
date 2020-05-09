@@ -1,22 +1,22 @@
 package authentication
 
-// Error describes an authentication error against Keycloak.
-type Error struct {
+// authenticationError describes an authentication error against Keycloak.
+type authenticationError struct {
 	err   error
 	Text  string
 	Token string
 }
 
-func (e Error) Error() string {
+func (e authenticationError) Error() string {
 	return e.Text
 }
 
 // Unwrap returns the wrapped error.
-func (e Error) Unwrap() error {
+func (e authenticationError) Unwrap() error {
 	return e.err
 }
 
-// NewError creates a new authentication error.
-func NewError(err error, text string, token string) Error {
-	return Error{err, text, token}
+// newAuthenticationError creates a new authentication error.
+func newAuthenticationError(text string, token string, err error) authenticationError {
+	return authenticationError{err, text, token}
 }
