@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
@@ -42,17 +43,9 @@ type authenticationResponse struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
-// cacheEntry describes a token with its expiration time to be used in a simple cache.
-// After we have successfully validated the token by firing a request against keycloak,
-// we remember the token's validity until
-type cacheEntry struct {
-	expiresAt int
-	token     string
-}
-
 // cache stores all already validated (and still valid) tokens.
 // Before a token is authenticated, its expiration date is checked.
-var cache map[cacheEntry] bool
+var cache map[string]int64 = make(map[string]int64)
 
 // KeycloakWithConfig registers authentication endpoints and handles token validation on each request.
 func KeycloakWithConfig(e *echo.Echo, config KeycloakConfig) func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -109,6 +102,33 @@ func (config *KeycloakConfig) isAuthenticated(c echo.Context) error {
 		return newAuthenticationError("Empty token", token, nil)
 	}
 
+	// Check cache before accessing keycloak.
+	var jwtToken string
+	if len(token) > 7 {
+		jwtToken = token[7:]
+	}
+	expiresAt, found := cache[jwtToken]
+	if found {
+		log.Info().Msg("Found token in cache")
+		now := time.Now().Unix()
+		if expiresAt > now {
+			log.Info().
+				Str("token", token).
+				Int64("expiresAt", expiresAt).
+				Msg("Accepting token from cache")
+			return nil
+		}
+
+		// Entry should be removed, since it's expired.
+		log.Info().
+			Str("token", token).
+			Int64("expiresAt", expiresAt).
+			Msg("Remove expired token from cache")
+		delete(cache, token)
+	} else {
+		log.Info().Msg("token not found")
+	}
+
 	// Access userinfo in keycloak using the provided token to check if the token is valid.
 	req, err := http.NewRequest("GET", config.getKeycloakURLFor("userinfo"), nil)
 	req.Header.Add("Authorization", token)
@@ -120,6 +140,7 @@ func (config *KeycloakConfig) isAuthenticated(c echo.Context) error {
 	}
 	if resp.StatusCode == 200 {
 		// Happy flow.
+		// TODO Add here, too.
 		return nil
 	}
 	if resp.StatusCode/100 == 4 {
@@ -204,12 +225,25 @@ func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r log
 	var v map[string]string
 	dec.Decode(&v)
 
+	atoken := v["access_token"]
 	token := authenticationResponse{
 		AccessToken:  v["access_token"],
 		RefreshToken: v["refresh_token"],
 	}
+	addTokenToCache(atoken)
 	log.Info().Str("username", r.Username).Msg("Successful login")
 	return &token, nil
+}
+
+func addTokenToCache(token string) {
+	t, _ := jwt.Parse(token, nil)
+	claims := t.Claims.(jwt.MapClaims)
+	expiresAt := int64(claims["exp"].(float64))
+	cache[token] = expiresAt
+	log.Info().
+		Str("token", token).
+		Int64("expiresAt", expiresAt).
+		Msg("Adding token to cache")
 }
 
 func (config *KeycloakConfig) addEndpointLogout(e *echo.Echo) {
