@@ -42,6 +42,18 @@ type authenticationResponse struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
+// cacheEntry describes a token with its expiration time to be used in a simple cache.
+// After we have successfully validated the token by firing a request against keycloak,
+// we remember the token's validity until
+type cacheEntry struct {
+	expiresAt int
+	token     string
+}
+
+// cache stores all already validated (and still valid) tokens.
+// Before a token is authenticated, its expiration date is checked.
+var cache map[cacheEntry] bool
+
 // KeycloakWithConfig registers authentication endpoints and handles token validation on each request.
 func KeycloakWithConfig(e *echo.Echo, config KeycloakConfig) func(next echo.HandlerFunc) echo.HandlerFunc {
 	if config.Protocol == "" || config.Hostname == "" || config.Port == "" || config.Realm == "" || config.LoginURL == "" || config.LogoutURL == "" {
