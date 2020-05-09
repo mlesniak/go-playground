@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/mlesniak/go-demo/pkg/authentication"
 	"github.com/mlesniak/go-demo/pkg/context"
@@ -17,8 +18,8 @@ func main() {
 	e := newEchoServer()
 
 	// Middlewares.
-	// TODO Use RequestId and add to custom context
 	e.Use(context.CreateCustomContext)
+	e.Use(middleware.RequestID())
 	e.Use(authentication.KeycloakWithConfig(e, authentication.KeycloakConfig{
 		// TODO Use environment variables
 		Protocol: "http",
