@@ -248,6 +248,12 @@ func (config *KeycloakConfig) handleRefresh(c *context.CustomContext, r refreshR
 	m["refresh_token"] = []string{r.RefreshToken}
 	m["grant_type"] = []string{"refresh_token"}
 	m["client_id"] = []string{"api"}
+	return config.getTokenFromEndpoint(c, m)
+}
+
+// getTokenFromEndpoint calls keycloak's token endpoint using a form request
+// with values from the given map and tries to parse the response.
+func (config *KeycloakConfig) getTokenFromEndpoint(c *context.CustomContext, m map[string][]string) (*authenticationResponse, error) {
 	resp, err := http.PostForm(config.getKeycloakURLFor("token"), m)
 	if err != nil {
 		return nil, errors.New("Unknown error")
@@ -277,28 +283,7 @@ func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r log
 	m["password"] = []string{r.Password}
 	m["grant_type"] = []string{"password"}
 	m["client_id"] = []string{"api"}
-	resp, err := http.PostForm(config.getKeycloakURLFor("token"), m)
-	if err != nil {
-		return nil, errors.New("Unknown error")
-	}
-	log.Info().Int("code", resp.StatusCode).Msg("Status code")
-	if resp.StatusCode/100 == 4 {
-		return nil, errors.New("Unauthorized")
-	}
-	dec := json.NewDecoder(resp.Body)
-	var v map[string]string
-	dec.Decode(&v)
-
-	atoken := v["access_token"]
-	token := authenticationResponse{
-		AccessToken:  v["access_token"],
-		RefreshToken: v["refresh_token"],
-	}
-	addTokenToCache(atoken)
-	useTokenToAddUserContext(c, atoken)
-	log := c.Log()
-	log.Info().Msg("Successful login")
-	return &token, nil
+	return config.getTokenFromEndpoint(c, m)
 }
 
 func addTokenToCache(token string) {
