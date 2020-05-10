@@ -52,4 +52,5 @@ We use our app as a proxy
 - [ ] Cache token to prevent accessing keycloak on each request
 - [ ] Add integration tests
 - [ ] Add swagger
+- [ ] Add mongo database support
 
