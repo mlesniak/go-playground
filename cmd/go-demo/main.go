@@ -18,8 +18,8 @@ func main() {
 	e := newEchoServer()
 
 	// Middlewares.
-	e.Use(context.CreateCustomContext)
 	e.Use(middleware.RequestID())
+	e.Use(context.CreateCustomContext)
 	e.Use(authentication.KeycloakWithConfig(e, authentication.KeycloakConfig{
 		// TODO Use environment variables
 		Protocol: "http",

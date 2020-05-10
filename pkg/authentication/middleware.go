@@ -56,7 +56,10 @@ func KeycloakWithConfig(e *echo.Echo, config KeycloakConfig) func(next echo.Hand
 
 	// Check token on each request.
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
+		return func(cc echo.Context) error {
+			c := cc.(*context.CustomContext)
+			log := c.Log()
+
 			// Check for ignored URLS such as login routes.
 			shouldURLbeChecked := true
 			for _, i := range config.IgnoredURL {
@@ -74,8 +77,9 @@ func KeycloakWithConfig(e *echo.Echo, config KeycloakConfig) func(next echo.Hand
 				}
 				// Everything is ok, add authentication info to request context.
 				addUserInfoToContext(c)
-				cc := c.(*context.CustomContext)
-				log.Info().Str("username", cc.Username()).Msg("Successful authentication by token")
+				// Update default context with username
+				log = c.Log()
+				log.Info().Msg("Successful authentication by token")
 			}
 
 			// Continue chain.
@@ -95,7 +99,8 @@ func (config *KeycloakConfig) getKeycloakURLFor(operation string) string {
 }
 
 // IsAuthenticated returns true if the user submitted a valid JWT token.
-func (config *KeycloakConfig) isAuthenticated(c echo.Context) error {
+func (config *KeycloakConfig) isAuthenticated(c *context.CustomContext) error {
+	log := c.Log()
 	token := c.Request().Header.Get("Authorization")
 	if token == "" {
 		return newAuthenticationError("Empty token", token, nil)
@@ -151,11 +156,13 @@ func (config *KeycloakConfig) isAuthenticated(c echo.Context) error {
 // addUserInfoToContext adds the information defined in the token to the user context.
 //
 // We assume that the token in the header has already been checked and is a vaild JWT token.
-func addUserInfoToContext(cc echo.Context) {
-	c := cc.(*context.CustomContext)
-
+func addUserInfoToContext(c *context.CustomContext) {
 	// See https://github.com/dgrijalva/jwt-go/issues/37 for jwt.Parse with nil
 	tokenString := c.Request().Header.Get("Authorization")[7:]
+	useTokenToAddUserContext(c, tokenString)
+}
+
+func useTokenToAddUserContext(c *context.CustomContext, tokenString string) {
 	token, _ := jwt.Parse(tokenString, nil)
 	if token == nil {
 		panic("Token was not parsable. This should not happen, since we submitted the token to keycloak beforehand.")
@@ -229,7 +236,9 @@ func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r log
 		RefreshToken: v["refresh_token"],
 	}
 	addTokenToCache(atoken)
-	log.Info().Str("username", r.Username).Msg("Successful login")
+	useTokenToAddUserContext(c, atoken)
+	log := c.Log()
+	log.Info().Msg("Successful login")
 	return &token, nil
 }
 
@@ -244,6 +253,7 @@ func addTokenToCache(token string) {
 		Msg("Adding token to cache")
 }
 
+// TODO Add logging out logout
 func (config *KeycloakConfig) addEndpointLogout(e *echo.Echo) {
 	e.POST(config.LogoutURL, func(c echo.Context) error {
 		token := c.Request().Header.Get("Authorization")
