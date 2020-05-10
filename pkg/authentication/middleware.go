@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -35,7 +36,7 @@ type loginRequest struct {
 type logoutRequest struct {
 	Username     string `json:"username"`
 	Password     string `json:"password"`
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"refreshToken"`
 }
 
 type authenticationResponse struct {
@@ -253,14 +254,12 @@ func addTokenToCache(token string) {
 		Msg("Adding token to cache")
 }
 
-// TODO Add logging out logout
 func (config *KeycloakConfig) addEndpointLogout(e *echo.Echo) {
-	e.POST(config.LogoutURL, func(c echo.Context) error {
-		token := c.Request().Header.Get("Authorization")
-		if token == "" {
-			return c.NoContent(http.StatusOK)
-		}
+	e.POST(config.LogoutURL, func(cc echo.Context) error {
+		c := cc.(*context.CustomContext)
+		log := c.Log()
 
+		// Try to logout.
 		var r logoutRequest
 		c.Bind(&r)
 		m := make(map[string][]string)
@@ -269,13 +268,21 @@ func (config *KeycloakConfig) addEndpointLogout(e *echo.Echo) {
 		m["username"] = []string{r.Username}
 		m["password"] = []string{r.Password}
 		resp, err := http.PostForm(config.getKeycloakURLFor("logout"), m)
-		if err != nil {
-			return c.NoContent(http.StatusInternalServerError)
-		}
-		if resp.StatusCode == 204 {
-			return c.NoContent(http.StatusOK)
+		if err != nil || resp.StatusCode != 204 {
+			message, _ := ioutil.ReadAll(resp.Body)
+			log.Warn().
+				Str("error", string(message)).
+				Int("statusCode", resp.StatusCode).
+				Msg("Internal server error")
+			return c.JSON(http.StatusInternalServerError, response.NewError("Internal error."))
 		}
 
-		return c.NoContent(http.StatusInternalServerError)
+		// Clear cache. This will always work, since we wouldn't be able to call the endpoint
+		// without authentication.
+		token := c.Request().Header.Get("Authorization")[7:]
+		delete(cache, token)
+
+		log.Info().Msg("Logged out successfully")
+		return c.NoContent(http.StatusOK)
 	})
 }
