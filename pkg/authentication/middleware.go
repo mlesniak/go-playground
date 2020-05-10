@@ -25,12 +25,16 @@ type KeycloakConfig struct {
 	IgnoredURL []string
 	LoginURL   string
 	LogoutURL  string
-	// RefreshURL string
+	RefreshURL string
 }
 
 type loginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+type refreshRequest struct {
+	RefreshToken string `json:"refreshToken"`
 }
 
 type logoutRequest struct {
@@ -50,7 +54,7 @@ var cache map[string]int64 = make(map[string]int64)
 
 // KeycloakWithConfig registers authentication endpoints and handles token validation on each request.
 func KeycloakWithConfig(e *echo.Echo, config KeycloakConfig) func(next echo.HandlerFunc) echo.HandlerFunc {
-	if config.Protocol == "" || config.Hostname == "" || config.Port == "" || config.Realm == "" || config.LoginURL == "" || config.LogoutURL == "" {
+	if config.Protocol == "" || config.Hostname == "" || config.Port == "" || config.Realm == "" || config.LoginURL == "" || config.LogoutURL == "" || config.RefreshURL == "" {
 		panic("The keycloak configuration is invalid, at least one required property is empty.")
 	}
 	config.addEndpoints(e)
@@ -189,12 +193,14 @@ func useTokenToAddUserContext(c *context.CustomContext, tokenString string) {
 // addEndpoints adds all relevant endpoints for authentication.
 func (config *KeycloakConfig) addEndpoints(e *echo.Echo) {
 	config.addEndpointLogin(e)
+	config.addEndpointRefresh(e)
 	config.addEndpointLogout(e)
 }
 
 func (config *KeycloakConfig) addEndpointLogin(e *echo.Echo) {
 	e.POST(config.LoginURL, func(cc echo.Context) error {
 		c := cc.(*context.CustomContext)
+		log := c.Log()
 
 		var r loginRequest
 		c.Bind(&r)
@@ -210,6 +216,58 @@ func (config *KeycloakConfig) addEndpointLogin(e *echo.Echo) {
 
 		return c.JSON(http.StatusOK, token)
 	})
+}
+
+func (config *KeycloakConfig) addEndpointRefresh(e *echo.Echo) {
+	e.POST(config.RefreshURL, func(cc echo.Context) error {
+		c := cc.(*context.CustomContext)
+		log := c.Log()
+
+		var r refreshRequest
+		c.Bind(&r)
+		if r.RefreshToken == "" {
+			log.Info().Msg("Empty refresh token")
+			return c.JSON(http.StatusBadRequest, response.NewError("Empty refreshToken"))
+		}
+
+		token, err := config.handleRefresh(c, r)
+		if err != nil {
+			log.Info().Msg("Login failed: " + err.Error())
+			return c.JSON(http.StatusUnauthorized, response.NewError(err.Error()))
+		}
+
+		log = c.Log()
+		log.Info().Msg("Successful refresh")
+		return c.JSON(http.StatusOK, token)
+	})
+}
+
+func (config *KeycloakConfig) handleRefresh(c *context.CustomContext, r refreshRequest) (*authenticationResponse, error) {
+	// Send request to keycloak
+	m := make(map[string][]string)
+	m["refresh_token"] = []string{r.RefreshToken}
+	m["grant_type"] = []string{"refresh_token"}
+	m["client_id"] = []string{"api"}
+	resp, err := http.PostForm(config.getKeycloakURLFor("token"), m)
+	if err != nil {
+		return nil, errors.New("Unknown error")
+	}
+	log.Info().Int("code", resp.StatusCode).Msg("Status code")
+	if resp.StatusCode/100 == 4 {
+		return nil, errors.New("Unauthorized")
+	}
+	dec := json.NewDecoder(resp.Body)
+	var v map[string]string
+	dec.Decode(&v)
+
+	atoken := v["access_token"]
+	token := authenticationResponse{
+		AccessToken:  v["access_token"],
+		RefreshToken: v["refresh_token"],
+	}
+	addTokenToCache(atoken)
+	useTokenToAddUserContext(c, atoken)
+	return &token, nil
 }
 
 func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r loginRequest) (*authenticationResponse, error) {
@@ -263,6 +321,7 @@ func (config *KeycloakConfig) addEndpointLogout(e *echo.Echo) {
 		var r logoutRequest
 		c.Bind(&r)
 		m := make(map[string][]string)
+		// TODO Make client_id configurable
 		m["client_id"] = []string{"api"}
 		m["refresh_token"] = []string{r.RefreshToken}
 		m["username"] = []string{r.Username}

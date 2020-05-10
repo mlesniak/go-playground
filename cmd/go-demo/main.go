@@ -29,6 +29,7 @@ func main() {
 
 		LoginURL:  "/api/login",
 		LogoutURL: "/api/logout",
+		RefreshURL: "/api/refresh",
 		IgnoredURL: []string{
 			"/api/login",
 			"/api/version",

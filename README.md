@@ -47,9 +47,8 @@ We use our app as a proxy
 
 # Next steps
 
-- [ ] Add support for refreshToken
+- [ ] Make client_id configurable
 - [ ] Deploy keycloak to K8s cluster
-- [ ] Cache token to prevent accessing keycloak on each request
 - [ ] Add integration tests
 - [ ] Add swagger
 - [ ] Add mongo database support
