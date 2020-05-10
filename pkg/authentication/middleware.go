@@ -21,6 +21,7 @@ type KeycloakConfig struct {
 	Hostname string
 	Port     string
 	Realm    string
+	Client   string
 
 	IgnoredURL []string
 	LoginURL   string
@@ -247,7 +248,7 @@ func (config *KeycloakConfig) handleRefresh(c *context.CustomContext, r refreshR
 	m := make(map[string][]string)
 	m["refresh_token"] = []string{r.RefreshToken}
 	m["grant_type"] = []string{"refresh_token"}
-	m["client_id"] = []string{"api"}
+	m["client_id"] = []string{config.Client}
 	return config.getTokenFromEndpoint(c, m)
 }
 
@@ -282,7 +283,7 @@ func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r log
 	m["username"] = []string{r.Username}
 	m["password"] = []string{r.Password}
 	m["grant_type"] = []string{"password"}
-	m["client_id"] = []string{"api"}
+	m["client_id"] = []string{config.Client}
 	return config.getTokenFromEndpoint(c, m)
 }
 
@@ -306,8 +307,7 @@ func (config *KeycloakConfig) addEndpointLogout(e *echo.Echo) {
 		var r logoutRequest
 		c.Bind(&r)
 		m := make(map[string][]string)
-		// TODO Make client_id configurable
-		m["client_id"] = []string{"api"}
+		m["client_id"] = []string{config.Client}
 		m["refresh_token"] = []string{r.RefreshToken}
 		m["username"] = []string{r.Username}
 		m["password"] = []string{r.Password}

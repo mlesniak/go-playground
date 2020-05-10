@@ -47,7 +47,6 @@ We use our app as a proxy
 
 # Next steps
 
-- [ ] Make client_id configurable
 - [ ] Deploy keycloak to K8s cluster
 - [ ] Add integration tests
 - [ ] Add swagger

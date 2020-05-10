@@ -26,6 +26,7 @@ func main() {
 		Hostname: "localhost",
 		Port:     "8081",
 		Realm:    "mlesniak",
+		Client:   "api",
 
 		LoginURL:  "/api/login",
 		LogoutURL: "/api/logout",
