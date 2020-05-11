@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: certbot
+spec:
+  containers:
+    - name: alpine
+      image: certbot/certbot
+      resources:
+            requests:
+              cpu: "10m"
+              memory: "5M"
+            limits:
+              cpu: "1000m"
+              memory: "128M"
+      command: [ "/bin/ash", "-c", "--" ]
+      args: [ "while true; do sleep 30; done;" ]
+
+# certbot -d api.mlesniak.dev,mlesniak.com,sarah.mlesniak.com,mlesniak.dev --standalone certonly
+
+# Initially
+# certbot -d mlesniak.dev,\*.mlesniak.dev --standalone certonly
+# and follow instructions on terminal
+# Renew with
+# certbot renew
+
+# Show with
+# cat /etc/letsencrypt/live/mlesniak.dev/privkey.pem
+# cat /etc/letsencrypt/live/mlesniak.dev/fullchain.pem
+#
+
+# In nginx container:
+# mkdir -p /www/data

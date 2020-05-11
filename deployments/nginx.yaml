@@ -65,7 +65,9 @@ data:
       listen 80 default_server;
       listen [::]:80 default_server;
       server_name _;
-      return 404;
+      # return 404;
+      # for certbot
+      root /www/data;
     }
 
     server {
@@ -85,7 +87,7 @@ data:
     }
 
     server {
-      listen       80;
+      listen       443;
       server_name keycloak.mlesniak.dev;
       location / {
           proxy_pass http://keycloak-service:8080;

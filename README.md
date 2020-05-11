@@ -58,7 +58,7 @@ For `mlesniak.dev`, use
 
 # Next steps
 
-- [ ] Make keycloak available under keycloak.mlesniak.dev
+- [ ] Make keycloak available under keycloak.mlesniak.dev; document crate certificate generation
 - [ ] Fix filebeat multi-attach-volume error
 - [ ] Update docker-compose file to use keycloak
 - [ ] Add integration tests
