@@ -39,7 +39,8 @@ online I leave it here for now.
 
 We use our app as a proxy
 
-    docker run --name keycloak -p 8081:8080 -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin quay.io/keycloak/keycloak:9.0.3
+    # docker run --name keycloak -p 8081:8080 -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin quay.io/keycloak/keycloak:9.0.3
+    kubectl port-forward service/keycloak-service 8081:8080
 
     export A=$(http POST :8080/api/login username=demo password=demo)
     export T=$(echo $A|jq -r .accessToken)
