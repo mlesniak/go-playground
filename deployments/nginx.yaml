@@ -17,6 +17,7 @@ spec:
           image: nginx:1.14.2
           ports:
             - containerPort: 80
+            - containerPort: 443
           resources:
             requests:
               cpu: "100m"
@@ -44,8 +45,13 @@ spec:
     app: nginx
   ports:
     - protocol: TCP
+      name: http
       port: 80
       targetPort: 80
+    - protocol: TCP
+      name: https
+      port: 443
+      targetPort: 443
 
 
 ---
@@ -64,6 +70,14 @@ data:
 
     server {
         listen       80;
+        server_name api.mlesniak.dev;
+        location / {
+            proxy_pass http://go-demo-service:80;
+        }
+    }
+
+    server {
+        listen       443;
         server_name api.mlesniak.dev;
         location / {
             proxy_pass http://go-demo-service:80;

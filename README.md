@@ -58,8 +58,9 @@ For `mlesniak.dev`, use
 
 # Next steps
 
-- [ ] Fix loadalancer ssl error :-| 
+- [ ] Fix loadalancer ssl error :-| (and update screenshot)
 - [ ] Make keycloak available under keycloak.mlesniak.dev
+- [ ] Fix filebeat multi-attach-volume error
 - [ ] Update docker-compose file to use keycloak
 - [ ] Add integration tests
 - [ ] Add swagger
