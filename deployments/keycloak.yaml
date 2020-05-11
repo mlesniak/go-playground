@@ -20,6 +20,8 @@ spec:
           securityContext:
             runAsUser: 0
           env:
+            - name: KEYCLOAK_FRONTEND_URL
+              value: https://keycloak.mlesniak.dev/auth/
             - name: KEYCLOAK_USER
               value: admin
             - name: KEYCLOAK_PASSWORD
