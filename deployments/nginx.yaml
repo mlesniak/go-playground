@@ -84,10 +84,10 @@ data:
         }
     }
 
-      server {
-        listen       80;
-        server_name foo.mlesniak.dev;
-        location / {
-            proxy_pass http://spiegel.de:80;
-        }
+    server {
+      listen       80;
+      server_name keycloak.mlesniak.dev;
+      location / {
+          proxy_pass http://keycloak-service:8080;
+      }
     }
