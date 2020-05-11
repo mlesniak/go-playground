@@ -28,6 +28,16 @@ spec:
                 secretKeyRef:
                   name: jwt-token
                   key: token
+            - name: KEYCLOAK_PROTOCOL
+              value: "http"
+            - name: KEYCLOAK_HOST
+              value: "keycloak-service"
+            - name: KEYCLOAK_PORT
+              value: "8080"
+            - name: KEYCLOAK_REALM
+              value: "mlesniak"
+            - name: KEYCLOAK_CLIENT
+              value: "api"
           resources:
             requests:
               cpu: "100m"

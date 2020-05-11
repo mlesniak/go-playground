@@ -37,7 +37,7 @@ online I leave it here for now.
 
 ## Example authentication with keycloak
 
-We use our app as a proxy
+We use our app as a proxy (local)
 
     # docker run --name keycloak -p 8081:8080 -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin quay.io/keycloak/keycloak:9.0.3
     kubectl port-forward service/keycloak-service 8081:8080
@@ -48,10 +48,16 @@ We use our app as a proxy
     http POST :8080/api number:=10 Authorization:"Bearer $T"
     http -v POST :8080/api/logout Authorization:"Bearer $T" refreshToken=$R username=demo password=demo
 
+For `mlesniak.dev`, use
+
+    export A=$(http POST https://api.mlesniak.dev/api/login username=demo password=demo)
+    export T=$(echo $A|jq -r .accessToken)
+    export R=$(echo $A|jq -r .refreshToken)
+    http POST https://api.mlesniak.dev/api number:=10 Authorization:"Bearer $T"
+    http -v POST https://mlesniak.dev/api/logout Authorization:"Bearer $T" refreshToken=$R username=demo password=demo
 
 # Next steps
 
-- [ ] Enable environment support and reconfigure application deployment for keycloak
 - [ ] Make keycloak available under keycloak.mlesniak.dev
 - [ ] Update docker-compose file to use keycloak
 - [ ] Add integration tests

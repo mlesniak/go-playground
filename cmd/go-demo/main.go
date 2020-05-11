@@ -21,12 +21,11 @@ func main() {
 	e.Use(middleware.RequestID())
 	e.Use(context.CreateCustomContext)
 	e.Use(authentication.KeycloakWithConfig(e, authentication.KeycloakConfig{
-		// TODO Use environment variables
-		Protocol: "http",
-		Hostname: "localhost",
-		Port:     "8081",
-		Realm:    "mlesniak",
-		Client:   "api",
+		Protocol: os.Getenv("KEYCLOAK_PROTOCOL"),
+		Hostname: os.Getenv("KEYCLOAK_HOST"),
+		Port:     os.Getenv("KEYCLOAK_PORT"),
+		Realm:    os.Getenv("KEYCLOAK_REALM"),
+		Client:   os.Getenv("KEYCLOAK_CLIENT"),
 
 		LoginURL:  "/api/login",
 		LogoutURL: "/api/logout",
