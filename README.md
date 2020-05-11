@@ -58,6 +58,7 @@ For `mlesniak.dev`, use
 
 # Next steps
 
+- [ ] Fix loadalancer ssl error :-| 
 - [ ] Make keycloak available under keycloak.mlesniak.dev
 - [ ] Update docker-compose file to use keycloak
 - [ ] Add integration tests
