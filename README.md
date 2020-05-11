@@ -14,9 +14,12 @@ This is a playground for misc. go frameworks usable in a production system.
 
 ![screenshot](docs/loadbalancer-rules.png)
 
-## Add secret logging token
+## Add secrets
+
+Secret handling is explicitliy manual
 
     echo -n "TOKEN"|kubectl create secret generic sematext-token --from-file=token=/dev/stdin
+    echo -n "PASSWORD"|kubectl create secret generic keycloak-passowrd --from-file=password=/dev/stdin
 
 
 ## Enable filebeat kubernetes authentication
@@ -47,7 +50,9 @@ We use our app as a proxy
 
 # Next steps
 
-- [ ] Deploy keycloak to K8s cluster
+- [ ] Enable environment support and reconfigure application deployment for keycloak
+- [ ] Make keycloak available under keycloak.mlesniak.dev
+- [ ] Update docker-compose file to use keycloak
 - [ ] Add integration tests
 - [ ] Add swagger
 - [ ] Add mongo database support
