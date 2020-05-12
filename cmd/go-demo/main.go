@@ -2,18 +2,47 @@ package main
 
 import (
 	"os"
+	"time"
 
-	"github.com/labstack/echo/v4/middleware"
+	ctx "context"
+
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/mlesniak/go-demo/pkg/authentication"
 	"github.com/mlesniak/go-demo/pkg/context"
 	"github.com/mlesniak/go-demo/pkg/demo"
 	"github.com/mlesniak/go-demo/pkg/version"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
+	c, _ := ctx.WithTimeout(ctx.Background(), 10*time.Second)
+	options := options.Client().
+		SetAuth(options.Credential{
+			Username: "admin",
+			Password: "admin",
+		}).
+		ApplyURI("mongodb://localhost:27017")
+	client, err := mongo.Connect(c, options)
+	if err != nil {
+		panic(err)
+	}
+	api := client.Database("dev").Collection("api")
+
+	c, _ = ctx.WithTimeout(ctx.Background(), 5*time.Second)
+	_, err = api.InsertOne(c, bson.M{"name": "pi", "value": 3.14159})
+	if err != nil {
+		panic(err)
+	}
+
+}
+
+func xmain() {
 	configureLogging()
 	e := newEchoServer()
 
@@ -27,8 +56,8 @@ func main() {
 		Realm:    os.Getenv("KEYCLOAK_REALM"),
 		Client:   os.Getenv("KEYCLOAK_CLIENT"),
 
-		LoginURL:  "/api/login",
-		LogoutURL: "/api/logout",
+		LoginURL:   "/api/login",
+		LogoutURL:  "/api/logout",
 		RefreshURL: "/api/refresh",
 		IgnoredURL: []string{
 			"/api/login",
