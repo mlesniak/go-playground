@@ -47,8 +47,12 @@ spec:
             type: Directory
         - name: pvc
           # We could use a hostPath as a quick fix (see https://kubernetes.io/docs/concepts/storage/volumes/#hostpath)
-          persistentVolumeClaim:
-            claimName: filebeat-pvc
+          # persistentVolumeClaim:
+          #   claimName: filebeat-pvc
+          # This will re-send data if we re-deploy a node!
+          hostPath:
+              path: /data/filebeat
+              type: DirectoryOrCreate
 
 
 ---

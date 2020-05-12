@@ -149,7 +149,7 @@ func (config *KeycloakConfig) isAuthenticated(c *context.CustomContext) error {
 		// Happy flow.
 		// Add token on successful authentication w/o cache here, too. This is necessary
 		// if the server has been restarted in the meantime while the user has still an active token.
-		addTokenToCache(jwtToken)
+		addTokenToCache(c, jwtToken)
 		return nil
 	}
 	if resp.StatusCode/100 == 4 {
@@ -272,7 +272,7 @@ func (config *KeycloakConfig) getTokenFromEndpoint(c *context.CustomContext, m m
 		AccessToken:  v["access_token"],
 		RefreshToken: v["refresh_token"],
 	}
-	addTokenToCache(atoken)
+	addTokenToCache(c, atoken)
 	useTokenToAddUserContext(c, atoken)
 	return &token, nil
 }
@@ -287,7 +287,8 @@ func (config *KeycloakConfig) handleInitialLogin(c *context.CustomContext, r log
 	return config.getTokenFromEndpoint(c, m)
 }
 
-func addTokenToCache(token string) {
+func addTokenToCache(c *context.CustomContext, token string) {
+	log := c.Log()
 	t, _ := jwt.Parse(token, nil)
 	claims := t.Claims.(jwt.MapClaims)
 	expiresAt := int64(claims["exp"].(float64))
