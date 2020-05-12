@@ -58,9 +58,9 @@ For `mlesniak.dev`, use
 
 # Next steps
 
-- [ ] Fix filebeat multi-attach-volume error
-- [ ] Update docker-compose file to use keycloak
-- [ ] Add integration tests
-- [ ] Add swagger
 - [ ] Add mongo database support
+- [ ] Cleanup README (and move todo to dedicated file)
+- [ ] Add swagger
+- [ ] Add integration tests
+- [ ] Update docker-compose file to use keycloak locally ()
 
