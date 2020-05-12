@@ -46,6 +46,7 @@ spec:
             path: /var/lib/docker/containers
             type: Directory
         - name: pvc
+          # We could use a hostPath as a quick fix (see https://kubernetes.io/docs/concepts/storage/volumes/#hostpath)
           persistentVolumeClaim:
             claimName: filebeat-pvc
 
