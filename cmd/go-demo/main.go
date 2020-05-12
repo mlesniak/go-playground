@@ -2,6 +2,7 @@ package main
 
 import (
 	ctx "context"
+	"fmt"
 	"os"
 	"time"
 
@@ -21,6 +22,17 @@ import (
 func main() {
 	col := database.Collection()
 	col.InsertOne(ctx.Background(), bson.M{"started": time.Now()})
+
+	cur, _ := col.Find(ctx.Background(), bson.M{})
+	defer cur.Close(ctx.Background())
+	for cur.Next(ctx.Background()) {
+		var row bson.M
+		cur.Decode(&row)
+		if row["name"] != nil {
+			fmt.Printf("%v %T\n", row["name"], row["name"])
+		}
+	}
+
 
 	configureLogging()
 	e := newEchoServer()
