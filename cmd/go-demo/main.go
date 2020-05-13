@@ -1,39 +1,20 @@
 package main
 
 import (
-	ctx "context"
 	"os"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/mlesniak/go-demo/pkg/authentication"
 	"github.com/mlesniak/go-demo/pkg/context"
-	"github.com/mlesniak/go-demo/pkg/database"
 	"github.com/mlesniak/go-demo/pkg/demo"
 	"github.com/mlesniak/go-demo/pkg/version"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 func main() {
 	configureLogging()
-	
-	col := database.Collection()
-	col.InsertOne(ctx.Background(), bson.M{"started": time.Now()})
-
-	cur, _ := col.Find(ctx.Background(), bson.M{})
-	defer cur.Close(ctx.Background())
-	for cur.Next(ctx.Background()) {
-		var row bson.M
-		cur.Decode(&row)
-		if v, ok := row["name"].(string); ok {
-			log.Info().Msg("value: " + v)
-		}
-	}
-
 	e := newEchoServer()
 
 	// Middlewares.
