@@ -2,6 +2,7 @@ package database
 
 import (
 	ctx "context"
+	"os"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -29,12 +30,15 @@ func init() {
 	c, cancel := ctx.WithTimeout(ctx.Background(), 10*time.Second)
 	defer cancel()
 
-	// TODO Use environment variables
-	host := "mongodb://localhost:27017"
+	url := os.Getenv("MONGODB_URL")
+	username := os.Getenv("MONGODB_USERNAME")
+	password := os.Getenv("MONGODB_PASSWORD")
+
+	host := "mongodb://" + url
 	options := options.Client().
 		SetAuth(options.Credential{
-			Username: "admin",
-			Password: "admin",
+			Username: username,
+			Password: password,
 		}).
 		ApplyURI(host)
 	cl, err := mongo.Connect(c, options)
