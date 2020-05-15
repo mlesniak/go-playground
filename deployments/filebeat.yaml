@@ -23,51 +23,19 @@ spec:
                   name: sematext-token
                   key: token
           volumeMounts:
-            # TODO necessary to mount socket?
-            - name: socket
-              mountPath: /var/run/docker.sock
             - name: logfiles
               mountPath: /var/lib/docker/containers
             - name: config-volume
               mountPath: /usr/share/filebeat/filebeat.yml
               subPath: filebeat.yml
-            - mountPath: "/usr/share/filebeat/data"
-              name: pvc
       volumes:
         - name: config-volume
           configMap:
             name: filebeat-config
-        - name: socket
-          hostPath:
-            path: /var/run/docker.sock
-            type: Socket
         - name: logfiles
           hostPath:
             path: /var/lib/docker/containers
             type: Directory
-        - name: pvc
-          # We could use a hostPath as a quick fix (see https://kubernetes.io/docs/concepts/storage/volumes/#hostpath)
-          # persistentVolumeClaim:
-          #   claimName: filebeat-pvc
-          # This will re-send data if we re-deploy a node!
-          hostPath:
-              path: /data/filebeat
-              type: DirectoryOrCreate
-
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: filebeat-pvc
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: do-block-storage
-
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -148,6 +116,7 @@ data:
               - type: container
                 json.keys_under_root: true
                 json.add_error_key: true
+                tail_files: true
                 paths:
                 - /var/lib/docker/containers/${data.kubernetes.container.id}/*.log
 
@@ -176,8 +145,8 @@ data:
       enabled: false
       overwrite: false
 
-    #output.console:
-    #  pretty: true
+    # output.console:
+    #   pretty: true
     output:
       elasticsearch:
         hosts: ["https://logsene-receiver.eu.sematext.com:443"]

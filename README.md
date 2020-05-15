@@ -19,7 +19,8 @@ This is a playground for misc. go frameworks usable in a production system.
 Secret handling is explicitliy manual
 
     echo -n "TOKEN"|kubectl create secret generic sematext-token --from-file=token=/dev/stdin
-    echo -n "PASSWORD"|kubectl create secret generic keycloak-passowrd --from-file=password=/dev/stdin
+    echo -n "PASSWORD"|kubectl create secret generic keycloak-password --from-file=password=/dev/stdin
+    echo -n "PASSWORD"|kubectl create secret generic mongodb-password --from-file=password=/dev/stdin
 
 
 ## Enable filebeat kubernetes authentication

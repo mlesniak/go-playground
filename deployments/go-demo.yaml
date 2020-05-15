@@ -38,6 +38,15 @@ spec:
               value: "mlesniak"
             - name: KEYCLOAK_CLIENT
               value: "api"
+            - name: MONGODB_URL
+              value: "mongodb-service:27017"
+            - name: MONGODB_USERNAME
+              value: "admin"
+            - name: MONGODB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-password
+                  key: password
           resources:
             requests:
               cpu: "100m"
