@@ -59,7 +59,8 @@ For `mlesniak.dev`, use
 
 # Next steps
 
-- [ ] Add mongo database support
+- [ ] Allow non-HTTP forwarding to mongodb from external source
+- [X] Add mongo database support
 - [ ] Cleanup README (and move todo to dedicated file)
 - [ ] Add swagger
 - [ ] Add integration tests

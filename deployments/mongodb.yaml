@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: mongodb
-          image: mongodb
+          image: mongo
           ports:
             - containerPort: 27017
           env:
@@ -41,6 +41,20 @@ spec:
         - name: pvc
           persistentVolumeClaim:
               claimName: mongodb-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-external-service
+spec:
+  type: NodePort
+  selector:
+    app: mongodb
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
 
 ---
 apiVersion: v1
