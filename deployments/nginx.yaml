@@ -52,6 +52,10 @@ spec:
       name: https
       port: 443
       targetPort: 443
+    - protocol: TCP
+      name: mongodb
+      port: 27017
+      targetPort: 27017
 
 ---
 apiVersion: v1
